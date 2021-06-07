@@ -45,4 +45,3 @@ class Client:
 
 c = Client()
 c.send_to_socket({'abc': 'abc'})
-#fan legi
