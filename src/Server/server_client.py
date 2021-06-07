@@ -1,4 +1,5 @@
 import json
+import select
 import threading
 import logging
 
@@ -8,17 +9,29 @@ logging.basicConfig(format='%(asctime)s :: %(levelname)s :: %(message)s', level=
 class Client:
     def __init__(self, client_socket):
         self.__client_socket = client_socket
-        self.__client_database_record = None
+        self.__client_database_usr_name = None
         self.__client_lock = threading.Lock()
 
-    def lock_acquire(self):
+    def set_client_usr_name(self, value):
+        self.__client_database_usr_name = value
+
+    def __lock_acquire(self):
         self.__client_lock.acquire()
 
-    def lock_release(self):
+    def __lock_release(self):
         self.__client_lock.release()
 
+    def ping(self):
+        self.send_to_socket({'request_type': 'ping'})
+
     def read_from_socket(self):
-        msg = self.__client_socket.recv(1024).decode()
+        self.__lock_acquire()
+        ready = select.select([self.__client_socket], [], [], 0.00001)
+        if ready[0]:
+            msg = self.__client_socket.recv(1024).decode()
+        else:
+            msg = ''
+        self.__lock_release()
         if msg == '':
             return None
         msg_dec = json.loads(msg)
@@ -27,5 +40,8 @@ class Client:
 
     def send_to_socket(self, msg_dict):
         response = json.dumps(msg_dict)
-        logging.debug(f'{self} sending message: {msg_dict}')
+        self.__lock_acquire()
         self.__client_socket.send(response.encode())
+        if msg_dict['request_type'] != 'ping':
+            logging.debug(f'{self} sent message: {msg_dict}')
+        self.__lock_release()
