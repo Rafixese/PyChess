@@ -25,6 +25,7 @@ class Server:
         self.__server_socket.bind((HOST, PORT))
         self.__server_socket.listen(9999)
         self.__clients = []
+
         threading.Thread(target=self.__accept_loop).start()
 
     def __accept_loop(self):
@@ -35,7 +36,7 @@ class Server:
             threading.Thread(target=self.__client_thread, args=(client_sock,)).start()
 
     def __client_thread(self, client_sock):
-        sleep_time = 2
+        sleep_time = 0.1
         client = Client(client_sock)
         self.__clients.append(client)
         while True:

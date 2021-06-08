@@ -3,6 +3,8 @@ from PyQt5 import QtWidgets
 from PyQt5.QtWidgets import QApplication, QWidget, QLabel, QMessageBox, QPushButton, QLineEdit, QMainWindow
 import sys
 from src.Client.menu import Menu
+from src.Client.server_client import Client
+from PyQt5.QtCore import pyqtSlot
 
 class Login(QtWidgets.QMainWindow):
     def __init__(self):
@@ -17,6 +19,7 @@ class Login(QtWidgets.QMainWindow):
         self.reg_show_bool = True
         self.InitWindow_login()
         self.InitWindow_register()
+        self.Client = Client(self)
 
     def InitWindow_login(self):
         self.log_text = QLabel(self)
@@ -32,14 +35,15 @@ class Login(QtWidgets.QMainWindow):
         self.in_login = QLineEdit(self)
         self.in_login.setGeometry(50, 125, 400, 25)
 
-        self.in_register = QLineEdit(self)
-        self.in_register.setEchoMode(2)
-        self.in_register.setGeometry(50, 225, 350, 25)
+        self.in_password_login = QLineEdit(self)
+        self.in_password_login.setEchoMode(2)
+        self.in_password_login.setGeometry(50, 225, 350, 25)
 
         self.log_reg = QPushButton("Login", self)
         self.log_reg.setGeometry(50, 300, 400, 50)
         self.log_reg.setStyleSheet("background-color: white")
         self.log_reg.clicked.connect(self.Switch_to_menu)
+
 
         self.log_button = QPushButton("Login", self)
         self.log_button.setGeometry(150, 25, 100, 50)
@@ -83,9 +87,9 @@ class Login(QtWidgets.QMainWindow):
         self.in_mail = QLineEdit(self)
         self.in_mail.setGeometry(50, 180, 400, 25)
 
-        self.in_passwrod = QLineEdit(self)
-        self.in_passwrod.setGeometry(50, 250, 350, 25)
-        self.in_passwrod.setEchoMode(2)
+        self.in_password_register = QLineEdit(self)
+        self.in_password_register.setGeometry(50, 250, 350, 25)
+        self.in_password_register.setEchoMode(2)
 
         self.reg_show = QPushButton("Show", self)
         self.reg_show.setGeometry(400, 250, 50, 25)
@@ -98,7 +102,7 @@ class Login(QtWidgets.QMainWindow):
             self.log_text.hide()
             self.pas_text.hide()
             self.in_login.hide()
-            self.in_register.hide()
+            self.in_password_login.hide()
             self.log_show.hide()
             self.log_button.setStyleSheet("background-color: white")
             self.reg_button.setStyleSheet("background-color: grey")
@@ -109,7 +113,7 @@ class Login(QtWidgets.QMainWindow):
             self.pasw_text.show()
             self.in_user.show()
             self.in_mail.show()
-            self.in_passwrod.show()
+            self.in_password_register.show()
             self.reg_show.show()
 
     def Switch_reg_log(self):
@@ -121,7 +125,7 @@ class Login(QtWidgets.QMainWindow):
             self.in_user.hide()
             self.in_mail.hide()
             self.reg_show.hide()
-            self.in_passwrod.hide()
+            self.in_password_register.hide()
             self.log_button.setStyleSheet("background-color: grey")
             self.reg_button.setStyleSheet("background-color: white")
             self.log_reg.setText("Login")
@@ -129,31 +133,49 @@ class Login(QtWidgets.QMainWindow):
             self.log_text.show()
             self.pas_text.show()
             self.in_login.show()
-            self.in_register.show()
+            self.in_password_login.show()
             self.log_show.show()
 
     def Show_hide_log_pass(self):
         if self.log_show_bool:
             self.log_show_bool = not self.log_show_bool
-            self.in_register.setEchoMode(0)
+            self.in_password_login.setEchoMode(0)
             self.log_show.setText("Hide")
         else:
             self.log_show_bool = not self.log_show_bool
-            self.in_register.setEchoMode(2)
+            self.in_password_login.setEchoMode(2)
             self.log_show.setText("Show")
 
     def Show_hide_reg_pass(self):
         if self.reg_show_bool:
             self.reg_show_bool = not self.reg_show_bool
-            self.in_passwrod.setEchoMode(0)
+            self.in_password_register.setEchoMode(0)
             self.reg_show.setText("Hide")
         else:
             self.reg_show_bool = not self.reg_show_bool
-            self.in_passwrod.setEchoMode(2)
+            self.in_password_register.setEchoMode(2)
             self.reg_show.setText("Show")
     def Switch_to_menu(self):
-        self.a = Menu()
-        self.a.show()
+        if self.login == True:
+            self.Client.login(self.in_login.text(),self.in_password_login.text())
+
+        else:
+            if len(self.in_user.text())>20 or len(self.in_user.text())<5:
+                QMessageBox.warning(self, "Register error", "To short or to long username", QMessageBox.Ok)
+            elif len(self.in_password_register.text())<5:
+                QMessageBox.warning(self, "Register error", "To short password", QMessageBox.Ok)
+            elif "@" not in self.in_mail.text():
+                QMessageBox.warning(self, "Register error", "Incorrect e-mail", QMessageBox.Ok)
+            else:
+                self.Client.register_user(self.in_user.text(),self.in_mail.text(),self.in_password_register.text())
+    @pyqtSlot()
+    def Display_error_login(self):
+        QMessageBox.warning(self,"Authorization error","Incorrect password or username",QMessageBox.Ok)
+
+    @pyqtSlot()
+    def Open_menu(self):
+        self.a = Menu(self.Client)
+        self.Client.set_parent(self.a)
         self.hide()
 
 if __name__ == "__main__":
