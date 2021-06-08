@@ -64,7 +64,7 @@ class BoardField(QLabel):
         return self.__piece is not None
 
     def add_piece(self, piece: 'Piece'):
-        if self.__piece is None and self.__color:
+        if self.__piece is None:
             self.__piece = piece
             piece.set_field(self)
             return True
@@ -105,10 +105,10 @@ class Piece(QLabel):
         if self.__field is not None:
             self.__field.remove_piece()
         self.__field = field
-        self.setGeometry(int(field.x_pos + FIELD_SIZE * 0.1),
-                         int(field.y_pos + FIELD_SIZE * 0.1),
-                         int(FIELD_SIZE * 0.8),
-                         int(FIELD_SIZE * 0.8))
+        self.setGeometry(int(field.x_pos),
+                         int(field.y_pos),
+                         int(FIELD_SIZE),
+                         int(FIELD_SIZE))
         self.show()
 
     def release_field(self):
@@ -130,7 +130,7 @@ class Piece(QLabel):
 class Chessboard(QWidget):
     def __init__(self, parent=None):
         super().__init__(parent)
-        self.__white_bottom_black_top = True
+        self.__white_bottom_black_top = False
         self.setup()
         self.__fields = self.set_fields()
         self.set_pieces()
@@ -164,4 +164,13 @@ class Chessboard(QWidget):
         return fields
 
     def set_pieces(self):
-        self.__fields[0][0].add_piece(Piece(self, True, 'p'))
+        pieces = ['rnbqkbnr', 'pppppppp']
+        if not self.__white_bottom_black_top:
+            pieces[0] = pieces[0][::-1]
+        for row_num, row in zip(range(0, 2), pieces):
+            for col_num, type in zip(range(8), row):
+                self.__fields[row_num][col_num].add_piece(Piece(self, not self.__white_bottom_black_top, type))
+        pieces.reverse()
+        for row_num, row in zip(range(6, 8), pieces):
+            for col_num, type in zip(range(8), row):
+                self.__fields[row_num][col_num].add_piece(Piece(self, self.__white_bottom_black_top, type))
