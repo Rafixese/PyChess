@@ -2,9 +2,9 @@ from PyQt5.QtGui import QFont
 from PyQt5 import QtWidgets
 from PyQt5.QtWidgets import QApplication, QWidget, QLabel, QMessageBox, QPushButton, QLineEdit, QMainWindow
 import sys
+from src.Client.menu import Menu
 
-
-class Window(QtWidgets.QMainWindow):
+class Login(QtWidgets.QMainWindow):
     def __init__(self):
         super().__init__()
         self.title = "PyChess"
@@ -39,6 +39,7 @@ class Window(QtWidgets.QMainWindow):
         self.log_reg = QPushButton("Login", self)
         self.log_reg.setGeometry(50, 300, 400, 50)
         self.log_reg.setStyleSheet("background-color: white")
+        self.log_reg.clicked.connect(self.Switch_to_menu)
 
         self.log_button = QPushButton("Login", self)
         self.log_button.setGeometry(150, 25, 100, 50)
@@ -150,9 +151,12 @@ class Window(QtWidgets.QMainWindow):
             self.reg_show_bool = not self.reg_show_bool
             self.in_passwrod.setEchoMode(2)
             self.reg_show.setText("Show")
-
+    def Switch_to_menu(self):
+        self.a = Menu()
+        self.a.show()
+        self.hide()
 
 if __name__ == "__main__":
     App = QApplication(sys.argv)
-    window = Window()
+    window = Login()
     sys.exit(App.exec())
