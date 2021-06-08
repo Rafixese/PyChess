@@ -4,10 +4,10 @@ from PyQt5.QtCore import Qt
 from PyQt5.QtWidgets import QApplication, QWidget, QLabel, QMessageBox, QPushButton, QLineEdit, QMainWindow, QGroupBox, \
     QGridLayout, QVBoxLayout, QDialog, QHBoxLayout, QListWidget, QScrollBar, QSlider
 import sys
-
+from src.Client.server_client import Client
 
 class Menu(QDialog):
-    def __init__(self):
+    def __init__(self,client):
         super().__init__()
         self.title = "PyChess"
         self.top = 50
@@ -17,6 +17,7 @@ class Menu(QDialog):
         self.login = True
         self.white = True
         self.Init_window()
+        self.Client = client
 
     def Init_window(self):
         self.setWindowTitle(self.title)
@@ -118,7 +119,8 @@ class Menu(QDialog):
             self.b.setStyleSheet("background-color: lightgrey")
             self.w.setStyleSheet("background-color: grey")
             self.white = not self.white
+
 if __name__ == "__main__":
     App = QApplication(sys.argv)
-    window = Menu()
+    window = Menu(None)
     sys.exit(App.exec())
