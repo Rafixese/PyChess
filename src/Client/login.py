@@ -5,6 +5,9 @@ import sys
 from src.Client.menu import Menu
 from src.Client.server_client import Client
 from PyQt5.QtCore import pyqtSlot
+from src.Client.captcha import Captcha
+from keras.models import load_model
+import numpy as np
 
 class Login(QtWidgets.QMainWindow):
     def __init__(self):
@@ -20,6 +23,7 @@ class Login(QtWidgets.QMainWindow):
         self.InitWindow_login()
         self.InitWindow_register()
         self.Client = Client(self)
+        self.cap = None
 
     def InitWindow_login(self):
         self.log_text = QLabel(self)
@@ -43,7 +47,6 @@ class Login(QtWidgets.QMainWindow):
         self.log_reg.setGeometry(50, 300, 400, 50)
         self.log_reg.setStyleSheet("background-color: white")
         self.log_reg.clicked.connect(self.Switch_to_menu)
-
 
         self.log_button = QPushButton("Login", self)
         self.log_button.setGeometry(150, 25, 100, 50)
@@ -155,28 +158,39 @@ class Login(QtWidgets.QMainWindow):
             self.reg_show_bool = not self.reg_show_bool
             self.in_password_register.setEchoMode(2)
             self.reg_show.setText("Show")
+
     def Switch_to_menu(self):
         if self.login == True:
-            self.Client.login(self.in_login.text(),self.in_password_login.text())
+            self.Client.login(self.in_login.text(), self.in_password_login.text())
 
         else:
-            if len(self.in_user.text())>20 or len(self.in_user.text())<5:
+            if len(self.in_user.text()) > 20 or len(self.in_user.text()) < 5:
                 QMessageBox.warning(self, "Register error", "To short or to long username", QMessageBox.Ok)
-            elif len(self.in_password_register.text())<5:
+            elif len(self.in_password_register.text()) < 5:
                 QMessageBox.warning(self, "Register error", "To short password", QMessageBox.Ok)
             elif "@" not in self.in_mail.text():
                 QMessageBox.warning(self, "Register error", "Incorrect e-mail", QMessageBox.Ok)
             else:
-                self.Client.register_user(self.in_user.text(),self.in_mail.text(),self.in_password_register.text())
+                if self.cap == None:
+                    self.cap = Captcha(self)
+                else:
+                    if self.cap.isHidden():
+                        self.cap.show()
+                    else:
+                        QMessageBox.warning(self, "Captcha", "Captcha error", QMessageBox.Ok)
+
     @pyqtSlot()
     def Display_error_login(self):
-        QMessageBox.warning(self,"Authorization error","Incorrect password or username",QMessageBox.Ok)
+        QMessageBox.warning(self, "Authorization error", "Incorrect password or username", QMessageBox.Ok)
 
     @pyqtSlot()
     def Open_menu(self):
         self.a = Menu(self.Client)
         self.Client.set_parent(self.a)
         self.hide()
+
+    def Register(self):
+        self.Client.register_user(self.in_user.text(), self.in_mail.text(), self.in_password_register.text())
 
 if __name__ == "__main__":
     App = QApplication(sys.argv)

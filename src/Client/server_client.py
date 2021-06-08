@@ -19,7 +19,7 @@ salt = b'$2b$12$djq/vdGik/e.nlUWotW6Au'
 logging.basicConfig(format='%(asctime)s :: %(levelname)s :: %(message)s', level=logging.DEBUG)
 
 # SERVER CONFIG
-HOST = ''
+HOST = 'localhost'
 PORT = 8888
 
 

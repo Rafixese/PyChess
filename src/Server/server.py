@@ -14,7 +14,7 @@ from src.Server.database import create_client, auth_client
 logging.basicConfig(format='%(asctime)s :: %(levelname)s :: %(message)s', level=logging.DEBUG)
 
 # SERVER CONFIG
-HOST = ''
+HOST = 'localhost'
 PORT = 8888
 
 
@@ -64,6 +64,7 @@ class Server:
                         msg['email'],
                         msg['password_hash']
                     )
+                    client.set_client_usr_name(msg['username'])
                     client.send_to_socket({'request_type': 'response_to_request', 'type': 'OK'})
                 except Exception as e:
                     logging.error(e)
