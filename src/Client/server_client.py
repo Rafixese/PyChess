@@ -10,24 +10,38 @@ from time import sleep
 import bcrypt
 
 # CRYPT SETTINGS
+from PyQt5.QtCore import QMetaObject
+from PyQt5.QtCore import Qt
+from PyQt5 import QtCore
 salt = b'$2b$12$djq/vdGik/e.nlUWotW6Au'
 
 # LOGGING CONFIG
 logging.basicConfig(format='%(asctime)s :: %(levelname)s :: %(message)s', level=logging.DEBUG)
 
 # SERVER CONFIG
-HOST = ''
+HOST = 'localhost'
 PORT = 8888
 
 
 class Client:
-    def __init__(self):
+    def __init__(self,parent):
         self.__username = None
         self.__client_socket = None
         self.__socket_lock = threading.Lock()
         self.__connect_to_server()
         self.__last_request = None
+        self.__parent = parent
         threading.Thread(target=self.__incoming_server_requests_watchdog).start()
+
+    def get_username(self):
+
+        return self.__username
+
+    def set_parent(self,parent):
+        self.__parent = parent
+
+    def get_parent(self):
+        return self.__parent
 
     def __connect_to_server(self):
         logging.debug(f'Connecting to server')
@@ -38,7 +52,7 @@ class Client:
             logging.error(str(error))
 
     def __incoming_server_requests_watchdog(self):
-        sleep_time = 2
+        sleep_time = 0.1
         while True:
             msg_arr = self.__read_from_socket()
             if msg_arr is None:
@@ -53,14 +67,19 @@ class Client:
                             logging.info(f'Logging in')
                             self.__username = msg['username']
                             logging.info(f'Set new username {self.__username}')
-                            # TODO Login procedure
+                            QMetaObject.invokeMethod(self.__parent, "Open_menu", Qt.QueuedConnection)
+
                         elif msg['type'] == 'ERROR':
                             logging.error(f'AUTH ERROR: {msg["msg"]}')
+                            QMetaObject.invokeMethod(self.__parent, "Display_error_login", Qt.QueuedConnection)
                     else:
                         if msg['type'] == 'OK':
                             logging.info(f'OK')
+                            QMetaObject.invokeMethod(self.__parent, "Open_menu", Qt.QueuedConnection)
                         elif msg['type'] == 'ERROR':
                             logging.error(f'{msg["msg"]}')
+
+
             time.sleep(sleep_time)
 
     def __read_from_socket(self):
@@ -112,6 +131,7 @@ class Client:
         self.__send_to_socket(msg)
 
     def login(self, username, password):
+
         password_hash = bcrypt.hashpw(password.encode(), salt).decode()
         msg = {
             'request_type': 'auth_client',
@@ -121,9 +141,9 @@ class Client:
         self.__send_to_socket(msg)
 
 # TODO get rid of it
+if __name__ == "__main__":
+    c = Client()
+    c.login('oplamo', 'qwerty')
+    while True:
+        pass
 
-c = Client()
-c.login('oplamo', 'qwerty')
-
-while True:
-    pass
