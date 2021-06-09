@@ -34,7 +34,6 @@ class Client:
         threading.Thread(target=self.__incoming_server_requests_watchdog).start()
 
     def get_username(self):
-
         return self.__username
 
     def set_parent(self,parent):
@@ -78,9 +77,11 @@ class Client:
                             QMetaObject.invokeMethod(self.__parent, "Open_menu", Qt.QueuedConnection)
                         elif msg['type'] == 'ERROR':
                             logging.error(f'{msg["msg"]}')
-                if msg['request_type'] == "star_game":
-                    print(msg["opponent"])
-
+                if msg['request_type'] == "start_game":
+                    self.__parent.oponnet_user_name.setText(msg["opponent"])
+                    #TODO go
+                if msg['request_type'] == "message":
+                    self.__parent.list_widget.addItem(msg['user']+": "+msg["text"])
 
             time.sleep(sleep_time)
 
@@ -142,13 +143,25 @@ class Client:
         }
         self.__send_to_socket(msg)
 
-    def Find_opponent(self):
+    def find_opponent(self):
         msg ={
             'request_type': 'find_opponent',
             'username': self.__username
         }
         self.__send_to_socket(msg)
-
+    def play_with_bot(self,color,elo):
+        msg = {
+            'request_type': 'play_with_bot',
+            'color': color,
+            'elo': elo
+        }
+        self.__send_to_socket(msg)
+    def send_messenge(self,text):
+        msg = {
+            'request_type': 'message',
+            'text': text
+        }
+        self.__send_to_socket(msg)
 # TODO get rid of it
 if __name__ == "__main__":
     c = Client()

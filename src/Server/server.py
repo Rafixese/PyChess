@@ -75,21 +75,28 @@ class Server:
                     usr = auth_client(msg['username'], msg['password_hash'])
                     client.set_client_usr_name(usr)
                     client.send_to_socket({'request_type': 'response_to_request', 'type': 'OK', 'username': usr})
+                    client.set_name(msg['username'])
                 except Exception as e:
                     logging.error(e)
                     client.send_to_socket({'request_type': 'response_to_request', 'type': 'ERROR', 'msg': str(e)})
             elif msg['request_type'] == 'find_opponent':
+                #setup game
                 try:
                     if self.__is_someone_waiting:
                         self.__is_someone_waiting = False
-                        self.__games[-1].set_clent2(Client)
+                        self.__games[0].set_clinet2(client)
 
                     else:
-                        g = Game_with_Player(Client)
+                        g = Game_with_Player(client)
                         self.__is_someone_waiting = True
                         self.__games.append(g)
                 except:
                     pass
+            elif msg['request_type'] == 'play_with_bot':
+                print(msg['color'],msg['elo'])
+            elif msg['request_type'] == 'message':
+                for i in self.__games:
+                    i.check_if_player_in(client,msg['text'])
 
             time.sleep(sleep_time)
 

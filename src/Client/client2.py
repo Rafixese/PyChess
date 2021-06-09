@@ -22,9 +22,8 @@ class Login(QtWidgets.QMainWindow):
         self.reg_show_bool = True
         self.InitWindow_login()
         self.InitWindow_register()
-        self.client = Client(self)
+        self.Client = Client(self)
         self.cap = None
-
 
     def InitWindow_login(self):
         self.log_text = QLabel(self)
@@ -162,7 +161,7 @@ class Login(QtWidgets.QMainWindow):
 
     def Switch_to_menu(self):
         if self.login == True:
-            self.client.login(self.in_login.text(), self.in_password_login.text())
+            self.Client.login(self.in_login.text(), self.in_password_login.text())
 
         else:
             if len(self.in_user.text()) > 20 or len(self.in_user.text()) < 5:
@@ -186,13 +185,12 @@ class Login(QtWidgets.QMainWindow):
 
     @pyqtSlot()
     def Open_menu(self):
-        self.a = Menu(self.client)
-        self.client.set_parent(self.a)
+        self.a = Menu(self.Client)
+        self.Client.set_parent(self.a)
         self.hide()
 
     def Register(self):
-        self.client.register_user(self.in_user.text(), self.in_mail.text(), self.in_password_register.text())
-
+        self.Client.register_user(self.in_user.text(), self.in_mail.text(), self.in_password_register.text())
 
 if __name__ == "__main__":
     App = QApplication(sys.argv)
