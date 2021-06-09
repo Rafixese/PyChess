@@ -4,16 +4,15 @@ from PyQt5.QtCore import Qt
 from PyQt5.QtWidgets import QApplication, QWidget, QLabel, QMessageBox, QPushButton, QLineEdit, QMainWindow, QGroupBox, \
     QGridLayout, QVBoxLayout, QDialog, QHBoxLayout, QListWidget, QScrollBar, QSlider
 import sys
+from game_components import Chessboard
 from src.Client.server_client import Client
 
 class Menu(QDialog):
     def __init__(self,client):
         super().__init__()
         self.title = "PyChess"
-        self.top = 50
-        self.left = 200
-        self.width = 1400
-        self.height = 1000
+        self.width = 1200
+        self.height = 920
         self.login = True
         self.white = True
         self.Init_window()
@@ -21,7 +20,7 @@ class Menu(QDialog):
 
     def Init_window(self):
         self.setWindowTitle(self.title)
-        self.setGeometry(self.left, self.top, self.width, self.height)
+        self.setFixedSize(self.width, self.height)
         self.Grid()
         self.show()
 
@@ -36,7 +35,12 @@ class Menu(QDialog):
         layout.addWidget(online, 3, 10, 1, 4)
         layout.addWidget(chat, 4, 10, 5, 4)
         # Miejsce na szachownice starczy podmnieć obiekt guzika Ważne żeby zachować numerki ewentualnie zmienićna 1, 1 9,9 żeby było równo
-        layout.addWidget(QPushButton("Miejsce na szachownice"), 0, 0, 9, 10)
+        layout.addWidget(QLabel('Player spaceholder'), 0, 0, 1, 10, alignment=Qt.AlignRight)
+        layout.addWidget(Chessboard(), 1, 0, 9, 10)
+        layout.addWidget(QLabel('Player spaceholder'), 10, 0, 1, 10, alignment=Qt.AlignRight)
+        layout.setRowStretch(0, 1)
+        layout.setRowStretch(2, 10)
+        layout.setRowStretch(10, 1)
 
         # Gra z botem
         vbox = QGridLayout()
