@@ -1,3 +1,5 @@
+import logging
+
 from PyQt5.QtGui import QFont, QPixmap
 from PyQt5 import QtWidgets
 from PyQt5.QtCore import Qt
@@ -5,6 +7,9 @@ from PyQt5.QtWidgets import QApplication, QWidget, QLabel, QMessageBox, QPushBut
     QGridLayout, QVBoxLayout, QDialog, QHBoxLayout, QListWidget, QScrollBar, QSlider
 
 import pathlib
+
+# LOGGING CONFIG
+logging.basicConfig(format='%(asctime)s :: %(levelname)s :: %(message)s', level=logging.DEBUG)
 
 BOARD_SIZE = 800
 FIELD_SIZE = int(BOARD_SIZE / 8)
@@ -60,7 +65,7 @@ class BoardField(QLabel):
     def piece(self):
         return self.__piece
 
-    def has_checker(self):
+    def has_piece(self):
         return self.__piece is not None
 
     def add_piece(self, piece: 'Piece'):
@@ -71,6 +76,7 @@ class BoardField(QLabel):
         return False
 
     def remove_piece(self):
+        self.__piece.hide()
         self.__piece = None
 
     def do_pos_belongs_to_field(self, x, y):
@@ -115,16 +121,23 @@ class Piece(QLabel):
         self.__field = None
 
     def mouseMoveEvent(self, event):
-        if self.__parent.is_white_move == self.is_white:
-            pos_x, pos_y = int(event.windowPos().x() - FIELD_SIZE * 0.6), int(
-                event.windowPos().y() - FIELD_SIZE)
-            self.raise_()
-            self.move(pos_x, pos_y)
+        # TODO Move restriction
+        pos_x, pos_y = int(event.windowPos().x() - FIELD_SIZE * 0.6), int(
+            event.windowPos().y() - FIELD_SIZE)
+        self.raise_()
+        self.move(pos_x, pos_y)
 
     def mouseReleaseEvent(self, event):
-        if self.__parent.is_white_move == self.is_white:
-            pos_x, pos_y = int(event.windowPos().x()), int(event.windowPos().y())
-            fields = self.__parent.fields
+        # TODO Move restriction
+        pos_x, pos_y = int(event.windowPos().x()), int(event.windowPos().y()-FIELD_SIZE/2)
+        fields = self.__parent.fields
+        for row in fields:
+            for field in row:
+                if field.do_pos_belongs_to_field(pos_x, pos_y):
+                    logging.debug(f'Move {self.__field.label} -> {field.label}')
+                    if field.has_piece():
+                        field.remove_piece()
+                    field.add_piece(self)
 
 
 class Chessboard(QWidget):
@@ -133,7 +146,7 @@ class Chessboard(QWidget):
         self.__white_bottom_black_top = False
         self.setup()
         self.__fields = self.set_fields()
-        self.set_pieces()
+        self.reset_pieces()
         self.is_white_move = True
 
     @property
@@ -163,7 +176,7 @@ class Chessboard(QWidget):
             fields.append(rows)
         return fields
 
-    def set_pieces(self):
+    def reset_pieces(self):
         pieces = ['rnbqkbnr', 'pppppppp']
         if not self.__white_bottom_black_top:
             pieces[0] = pieces[0][::-1]
