@@ -6,11 +6,19 @@ import logging
 # LOGGING CONFIG
 logging.basicConfig(format='%(asctime)s :: %(levelname)s :: %(message)s', level=logging.DEBUG)
 
+
 class Client:
     def __init__(self, client_socket):
         self.__client_socket = client_socket
         self.__client_database_usr_name = None
+        self.__username = None
         self.__client_lock = threading.Lock()
+
+    def set_name(self, n):
+        self.__username = n
+
+    def get_username(self):
+        return self.__username
 
     def set_client_usr_name(self, value):
         self.__client_database_usr_name = value

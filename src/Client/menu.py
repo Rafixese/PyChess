@@ -4,19 +4,21 @@ from PyQt5.QtCore import Qt
 from PyQt5.QtWidgets import QApplication, QWidget, QLabel, QMessageBox, QPushButton, QLineEdit, QMainWindow, QGroupBox, \
     QGridLayout, QVBoxLayout, QDialog, QHBoxLayout, QListWidget, QScrollBar, QSlider
 import sys
-from game_components import Chessboard
+from src.Client.game_components import Chessboard
 from src.Client.server_client import Client
 
+
 class Menu(QDialog):
-    def __init__(self,client):
+    def __init__(self, client):
         super().__init__()
         self.title = "PyChess"
         self.width = 1200
         self.height = 920
         self.login = True
         self.white = True
+        self.client = client
+        self.in_game = False
         self.Init_window()
-        self.Client = client
 
     def Init_window(self):
         self.setWindowTitle(self.title)
@@ -35,9 +37,11 @@ class Menu(QDialog):
         layout.addWidget(online, 3, 10, 1, 4)
         layout.addWidget(chat, 4, 10, 5, 4)
         # Miejsce na szachownice starczy podmnieć obiekt guzika Ważne żeby zachować numerki ewentualnie zmienićna 1, 1 9,9 żeby było równo
-        layout.addWidget(QLabel('Player spaceholder'), 0, 0, 1, 10, alignment=Qt.AlignRight)
+        self.oponnet_user_name = QLabel('Player spaceholder')
+        layout.addWidget(self.oponnet_user_name, 0, 0, 1, 10, alignment=Qt.AlignRight)
         layout.addWidget(Chessboard(), 1, 0, 9, 10)
-        layout.addWidget(QLabel('Player spaceholder'), 10, 0, 1, 10, alignment=Qt.AlignRight)
+        self.user_name = QLabel(self.client.get_username())
+        layout.addWidget(self.user_name, 10, 0, 1, 10, alignment=Qt.AlignRight)
         layout.setRowStretch(0, 1)
         layout.setRowStretch(2, 10)
         layout.setRowStretch(10, 1)
@@ -57,14 +61,14 @@ class Menu(QDialog):
 
         self.dif = QLabel("Select difficulty")
         self.dif.setFont(QFont('Arial', 20))
-        vbox.addWidget(self.dif, 0, 0,1,2)
+        vbox.addWidget(self.dif, 0, 0, 1, 2)
         vbox.addWidget(self.slider, 1, 0, 1, 2)
         self.elo = QLabel("1000 ")
         self.elo.setFont(QFont('Arial', 20))
         vbox.addWidget(self.elo, 1, 3, 1, 1)
         label = QLabel("Select color of pieces")
         label.setFont(QFont('Arial', 20))
-        vbox.addWidget(label, 2, 0,1,2)
+        vbox.addWidget(label, 2, 0, 1, 2)
         self.w = QPushButton("White")
         self.w.setStyleSheet("Background-color: grey")
         self.w.clicked.connect(self.Switch_color_b_w)
@@ -74,13 +78,16 @@ class Menu(QDialog):
         vbox.addWidget(self.w, 3, 0)
         vbox.addWidget(self.b, 3, 1)
         self.play = QPushButton("Play")
-        vbox.addWidget(QLabel(),4,0,1,1)
-        vbox.addWidget(self.play,5,3,1,1)
+        self.play.clicked.connect(self.Play_with_bot)
+        vbox.addWidget(QLabel(), 4, 0, 1, 1)
+        vbox.addWidget(self.play, 5, 3, 1, 1)
         # Gra online
         vbox1 = QVBoxLayout()
         online.setLayout(vbox1)
 
-        vbox1.addWidget(QPushButton('Find opponet'))
+        self.find_button = QPushButton('Find opponet')
+        self.find_button.clicked.connect(self.Find_opponent)
+        vbox1.addWidget(self.find_button)
 
         # Donly box z miejscem przygotownym pod chat
         vbox2 = QGridLayout()
@@ -93,19 +100,13 @@ class Menu(QDialog):
         self.list_widget.setVerticalScrollBar(scroll_bar)
 
         vbox2.addWidget(self.list_widget, 0, 0, 1, 0)
-        vbox2.addWidget(QLineEdit(), 1, 0)
-        vbox2.addWidget(QPushButton("Send"), 1, 1)
+        self.text_messenge = QLineEdit()
+        vbox2.addWidget(self.text_messenge, 1, 0)
+        self.send_messenge = QPushButton("Send")
+        self.send_messenge.clicked.connect(self.Send_message)
+        vbox2.addWidget(self.send_messenge, 1, 1)
 
         # przykladowe wiadomosci dodane
-        self.list_widget.addItem("Piesek")
-        self.list_widget.addItem("fajny")
-        self.list_widget.addItem("to d4 to nieświeże zagranie")
-        self.list_widget.addItem("miss click sory")
-        self.list_widget.addItem("miss click sory")
-        self.list_widget.addItem("miss click sory")
-        self.list_widget.addItem("miss click sory")
-        self.list_widget.addItem("miss click sory")
-        self.list_widget.addItem("miss click sory")
 
     def Change_elo(self):
         if self.slider.value() >= 1000:
@@ -118,11 +119,32 @@ class Menu(QDialog):
             self.w.setStyleSheet("background-color: lightgrey")
             self.b.setStyleSheet("background-color: grey")
             self.white = not self.white
+
     def Switch_color_b_w(self):
         if not self.white:
             self.b.setStyleSheet("background-color: lightgrey")
             self.w.setStyleSheet("background-color: grey")
             self.white = not self.white
+
+    def Find_opponent(self):
+        if self.in_game == False:
+            self.client.find_opponent()
+            self.in_game = True
+        # TODO all stuff
+
+    def Play_with_bot(self):
+        if self.white:
+            self.client.play_with_bot("white", self.elo.text())
+        else:
+            self.client.play_with_bot("black", self.elo.text())
+
+    def Send_message(self):
+        if self.text_messenge.text().strip() == "":
+            pass
+        else:
+            self.list_widget.addItem("Ja: "+self.text_messenge.text())
+            self.client.send_messenge(self.text_messenge.text())
+            self.text_messenge.setText("")
 
 if __name__ == "__main__":
     App = QApplication(sys.argv)
