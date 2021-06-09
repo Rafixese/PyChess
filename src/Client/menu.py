@@ -1,6 +1,6 @@
 from PyQt5.QtGui import QFont
 from PyQt5 import QtWidgets
-from PyQt5.QtCore import Qt
+from PyQt5.QtCore import Qt, pyqtSlot
 from PyQt5.QtWidgets import QApplication, QWidget, QLabel, QMessageBox, QPushButton, QLineEdit, QMainWindow, QGroupBox, \
     QGridLayout, QVBoxLayout, QDialog, QHBoxLayout, QListWidget, QScrollBar, QSlider
 import sys
@@ -130,7 +130,7 @@ class Menu(QDialog):
         if self.in_game == False:
             self.client.find_opponent()
             self.in_game = True
-        # TODO all stuff
+            self.list_widget.addItem("SYSTEM: Looking for game")
 
     def Play_with_bot(self):
         if self.white:
@@ -142,11 +142,24 @@ class Menu(QDialog):
         if self.text_messenge.text().strip() == "":
             pass
         else:
-            self.list_widget.addItem("Ja: "+self.text_messenge.text())
+            self.list_widget.addItem("Ja: " + self.text_messenge.text())
             self.client.send_messenge(self.text_messenge.text())
             self.text_messenge.setText("")
 
-if __name__ == "__main__":
-    App = QApplication(sys.argv)
-    window = Menu(None)
-    sys.exit(App.exec())
+    @pyqtSlot()
+    def Win(self):
+        QMessageBox.warning(self, "Win", "Congratulation you won game", QMessageBox.Ok)
+
+    def closeEvent(self, event):
+        close = QMessageBox()
+        close.setText("You wanna close game?")
+        close.setStandardButtons(QMessageBox.Yes | QMessageBox.Cancel)
+        close = close.exec()
+
+        if close == QMessageBox.Yes:
+            event.accept()
+            self.client.shut_down()
+            self.destroy()
+            sys.exit()
+        else:
+            event.ignore()

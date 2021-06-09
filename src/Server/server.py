@@ -36,6 +36,11 @@ class Server:
             logging.info(f'New connection from {addr}')
             threading.Thread(target=self.__client_thread, args=(client_sock,)).start()
 
+    def __remove_from_games(self,client):
+        for i in self.__games:
+            if i.check_logout(client):
+                self.__games.remove(i)
+
     def __client_thread(self, client_sock):
         sleep_time = 0.1
         client = Client(client_sock)
@@ -47,10 +52,12 @@ class Server:
             except ConnectionResetError:
                 logging.warning(f'Connection reset for client {client}, deleting client')
                 self.__clients.remove(client)
+                self.__remove_from_games(client)
                 return
             except BrokenPipeError:
                 logging.warning(f'Broken pipe for client {client}, deleting client')
                 self.__clients.remove(client)
+                self.__remove_from_games(client)
                 return
             if msg is None or msg == '':
                 time.sleep(sleep_time)
@@ -84,7 +91,7 @@ class Server:
                 try:
                     if self.__is_someone_waiting:
                         self.__is_someone_waiting = False
-                        self.__games[0].set_clinet2(client)
+                        self.__games[-1].set_clinet2(client)
 
                     else:
                         g = Game_with_Player(client)

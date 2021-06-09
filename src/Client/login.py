@@ -188,11 +188,23 @@ class Login(QtWidgets.QMainWindow):
     def Open_menu(self):
         self.a = Menu(self.client)
         self.client.set_parent(self.a)
-        self.hide()
+        self.destroy()
 
     def Register(self):
         self.client.register_user(self.in_user.text(), self.in_mail.text(), self.in_password_register.text())
 
+    def closeEvent(self, event):
+        close = QMessageBox()
+        close.setText("You wanna close game?")
+        close.setStandardButtons(QMessageBox.Yes | QMessageBox.Cancel)
+        close = close.exec()
+
+        if close == QMessageBox.Yes:
+            event.accept()
+            self.client.shut_down()
+            self.destroy()
+        else:
+            event.ignore()
 
 if __name__ == "__main__":
     App = QApplication(sys.argv)
