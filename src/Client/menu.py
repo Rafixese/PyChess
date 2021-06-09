@@ -4,7 +4,7 @@ from PyQt5.QtCore import Qt
 from PyQt5.QtWidgets import QApplication, QWidget, QLabel, QMessageBox, QPushButton, QLineEdit, QMainWindow, QGroupBox, \
     QGridLayout, QVBoxLayout, QDialog, QHBoxLayout, QListWidget, QScrollBar, QSlider
 import sys
-from game_components import Chessboard
+from src.Client.game_components import Chessboard
 from src.Client.server_client import Client
 
 class Menu(QDialog):
@@ -80,7 +80,9 @@ class Menu(QDialog):
         vbox1 = QVBoxLayout()
         online.setLayout(vbox1)
 
-        vbox1.addWidget(QPushButton('Find opponet'))
+        self.find_button = QPushButton('Find opponet')
+        self.find_button.clicked.connect(self.Find_opponent)
+        vbox1.addWidget(self.find_button)
 
         # Donly box z miejscem przygotownym pod chat
         vbox2 = QGridLayout()
@@ -123,6 +125,10 @@ class Menu(QDialog):
             self.b.setStyleSheet("background-color: lightgrey")
             self.w.setStyleSheet("background-color: grey")
             self.white = not self.white
+
+    def Find_opponent(self):
+        # self.Client.Find_opponent()
+        pass
 
 if __name__ == "__main__":
     App = QApplication(sys.argv)

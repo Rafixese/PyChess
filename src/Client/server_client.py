@@ -78,6 +78,8 @@ class Client:
                             QMetaObject.invokeMethod(self.__parent, "Open_menu", Qt.QueuedConnection)
                         elif msg['type'] == 'ERROR':
                             logging.error(f'{msg["msg"]}')
+                if msg['request_type'] == "star_game":
+                    print(msg["opponent"])
 
 
             time.sleep(sleep_time)
@@ -137,6 +139,13 @@ class Client:
             'request_type': 'auth_client',
             'username': username,
             'password_hash': str(password_hash)
+        }
+        self.__send_to_socket(msg)
+
+    def Find_opponent(self):
+        msg ={
+            'request_type': 'find_opponent',
+            'username': self.__username
         }
         self.__send_to_socket(msg)
 

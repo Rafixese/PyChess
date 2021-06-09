@@ -9,7 +9,7 @@ import json
 from time import sleep
 from src.Server.server_client import Client
 from src.Server.database import create_client, auth_client
-
+from src.Server.Game_with_Player import Game_with_Player
 # LOGGING CONFIG
 logging.basicConfig(format='%(asctime)s :: %(levelname)s :: %(message)s', level=logging.DEBUG)
 
@@ -25,7 +25,8 @@ class Server:
         self.__server_socket.bind((HOST, PORT))
         self.__server_socket.listen(9999)
         self.__clients = []
-
+        self.__is_someone_waiting = False
+        self.__games = []
         threading.Thread(target=self.__accept_loop).start()
 
     def __accept_loop(self):
@@ -77,6 +78,18 @@ class Server:
                 except Exception as e:
                     logging.error(e)
                     client.send_to_socket({'request_type': 'response_to_request', 'type': 'ERROR', 'msg': str(e)})
+            elif msg['request_type'] == 'find_opponent':
+                try:
+                    if self.__is_someone_waiting:
+                        self.__is_someone_waiting = False
+                        self.__games[-1].set_clent2(Client)
+
+                    else:
+                        g = Game_with_Player(Client)
+                        self.__is_someone_waiting = True
+                        self.__games.append(g)
+                except:
+                    pass
 
             time.sleep(sleep_time)
 
