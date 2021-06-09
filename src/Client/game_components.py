@@ -1,4 +1,5 @@
 import logging
+import time
 
 from PyQt5.QtGui import QFont, QPixmap
 from PyQt5 import QtWidgets
@@ -20,7 +21,7 @@ FIELD_LETTERS = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H']
 class BoardField(QLabel):
     def __init__(self, parent, row, col, color, not_reversed):
         super().__init__(parent)
-        self.__label = f'{FIELD_LETTERS[-col-1]}{row+1}' if not not_reversed else f'{FIELD_LETTERS[col]}{8-row}'
+        self.__label = f'{FIELD_LETTERS[-col - 1]}{row + 1}' if not not_reversed else f'{FIELD_LETTERS[col]}{8 - row}'
         self.__parent = parent
         self.__row = row
         self.__col = col
@@ -121,31 +122,48 @@ class Piece(QLabel):
         self.__field = None
 
     def mouseMoveEvent(self, event):
-        # TODO Move restriction
-        pos_x, pos_y = int(event.windowPos().x() - FIELD_SIZE * 0.6), int(
-            event.windowPos().y() - FIELD_SIZE)
-        self.raise_()
-        self.move(pos_x, pos_y)
+        if self.__parent.white_bottom_black_top == self.is_white and self.__parent.is_player_turn:
+            pos_x, pos_y = int(event.windowPos().x() - FIELD_SIZE * 0.6), int(
+                event.windowPos().y() - FIELD_SIZE)
+            self.raise_()
+            self.move(pos_x, pos_y)
 
     def mouseReleaseEvent(self, event):
-        # TODO Move restriction
-        pos_x, pos_y = int(event.windowPos().x()), int(event.windowPos().y()-FIELD_SIZE/2)
-        fields = self.__parent.fields
-        for row in fields:
-            for field in row:
-                if field.do_pos_belongs_to_field(pos_x, pos_y):
-                    logging.debug(f'Move {self.__field.label} -> {field.label}')
-                    if field.has_piece():
-                        field.remove_piece()
-                    field.add_piece(self)
+        if self.__parent.white_bottom_black_top == self.is_white and self.__parent.is_player_turn:
+            pos_x, pos_y = int(event.windowPos().x()), int(event.windowPos().y() - FIELD_SIZE / 2)
+            fields = self.__parent.fields
+            moved = False
+            for row in fields:
+                if moved:
+                    break
+                for field in row:
+                    if moved:
+                        break
+                    if field.do_pos_belongs_to_field(pos_x, pos_y):
+                        if field == self.__field:
+                            break
+                        logging.debug(f'Move {self.__field.label} -> {field.label}')
+                        # TODO send move to server and wait for valid move response, maybe use thread lock here and release
+                        # TODO when move is valid but release in Client/server_client.py
+                        moved = True
+                        if field.has_piece():
+                            field.remove_piece()
+                        field.add_piece(self)
+            print(moved)
+            if not moved:
+                self.setGeometry(int(self.__field.x_pos),
+                                 int(self.__field.y_pos),
+                                 int(FIELD_SIZE),
+                                 int(FIELD_SIZE))
 
 
 class Chessboard(QWidget):
     def __init__(self, parent=None):
         super().__init__(parent)
-        self.__white_bottom_black_top = False
+        self.__white_bottom_black_top = True
+        self.__is_player_turn = self.__white_bottom_black_top
         self.setup()
-        self.__fields = self.set_fields()
+        self.__fields = self.__set_fields()
         self.reset_pieces()
         self.is_white_move = True
 
@@ -153,21 +171,39 @@ class Chessboard(QWidget):
     def fields(self):
         return self.__fields
 
+    @property
+    def white_bottom_black_top(self):
+        return self.__white_bottom_black_top
+
+    @property
+    def is_player_turn(self):
+        return self.__is_player_turn
+
     def change_sides(self, white_bottom_black_top):
         self.__white_bottom_black_top = white_bottom_black_top
-        self.set_fields()
+        self.__set_fields()
 
-    def find_field(self, row_n, col_n):
-        for row in self.__fields:
-            for f in row:
-                if f.row == row_n and f.col == col_n:
-                    return f
+    def find_field(self, label: str):
+        field_letter, field_num = label
+        col = FIELD_LETTERS.index(field_letter) if self.__white_bottom_black_top else 7 - FIELD_LETTERS.index(
+            field_letter)
+        row = 7 - (int(field_num) - 1) if self.__white_bottom_black_top else int(field_num)
+
+        return self.__fields[row][col]
 
     def setup(self):
         self.setGeometry(500, 500, BOARD_SIZE, BOARD_SIZE)
         self.show()
 
-    def set_fields(self):
+    def play_move(self, src: str, dst: str):
+        src_field = self.find_field(src)
+        dst_field = self.find_field(dst)
+        if dst_field.has_piece():
+            dst_field.remove_piece()
+        dst_field.add_piece(src_field.piece)
+        self.__is_player_turn = True
+
+    def __set_fields(self):
         fields = []
         for row in range(8):
             rows = []
