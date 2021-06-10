@@ -109,7 +109,7 @@ class Piece(QLabel):
         return self.__type
 
     def set_field(self, field):
-        if self.__field is not None:
+        if self.__field is not None and self.__field.has_piece():
             self.__field.remove_piece()
         self.__field = field
         self.setGeometry(int(field.x_pos),
@@ -157,9 +157,13 @@ class Piece(QLabel):
                         moved = True
                         self.__parent.is_white_move = not self.__parent.is_white_move
                         self.__parent.is_player_turn = False
+                        move_src = self.__field.label
+                        move_dst = field.label
+                        self.__parent.castle(move_src, move_dst)
                         if field.has_piece():
                             field.remove_piece()
                         field.add_piece(self)
+
             if not moved:
                 self.setGeometry(int(self.__field.x_pos),
                                  int(self.__field.y_pos),
@@ -199,6 +203,24 @@ class Chessboard(QWidget):
     def is_player_turn(self, val):
         self.__is_player_turn = val
 
+    def castle(self, move_src: str, move_dst: str):
+        print(move_src, move_dst)
+        dst_field = self.find_field(move_src)
+        dst_piece = dst_field.piece
+        if dst_piece.type != 'k':
+            return
+        castling_moves = [('E1', 'G1'), ('E1', 'C1'), ('E8', 'G8'), ('E8', 'C8')]
+        rook_moves = [('H1', 'F1'), ('A1', 'D1'), ('H8', 'F8'), ('A8', 'D8')]
+        print(((move_src, move_dst) in castling_moves))
+        if (move_src, move_dst) in castling_moves:
+            index = castling_moves.index((move_src, move_dst))
+            rook_move = rook_moves[index]
+            rook_src = self.find_field(rook_move[0])
+            rook_dst = self.find_field(rook_move[1])
+            rook = rook_src.piece
+            rook_src.remove_piece()
+            rook_dst.add_piece(rook)
+
     def change_sides(self, white_bottom_black_top):
         self.__white_bottom_black_top = white_bottom_black_top
 
@@ -217,6 +239,7 @@ class Chessboard(QWidget):
     def play_move(self, src: str, dst: str):
         src_field = self.find_field(src)
         dst_field = self.find_field(dst)
+        self.castle(src, dst)
         if dst_field.has_piece():
             dst_field.remove_piece()
         dst_field.add_piece(src_field.piece)
