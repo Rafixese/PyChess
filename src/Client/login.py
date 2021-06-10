@@ -5,8 +5,7 @@ import sys
 from src.Client.menu import Menu
 from src.Client.server_client import Client
 from PyQt5.QtCore import pyqtSlot
-from src.Client.captcha import Captcha
-from keras.models import load_model
+# from src.Client.captcha import Captcha
 import numpy as np
 
 class Login(QtWidgets.QMainWindow):
@@ -190,9 +189,12 @@ class Login(QtWidgets.QMainWindow):
         self.client.set_parent(self.a)
         self.destroy()
 
+    @pyqtSlot()
+    def Display_error_busy(self):
+        QMessageBox.warning(self, "Authorization error", "User already is used", QMessageBox.Ok)
+
     def Register(self):
         self.client.register_user(self.in_user.text(), self.in_mail.text(), self.in_password_register.text())
-
     def closeEvent(self, event):
         close = QMessageBox()
         close.setText("You wanna close game?")
@@ -203,6 +205,7 @@ class Login(QtWidgets.QMainWindow):
             event.accept()
             self.client.shut_down()
             self.destroy()
+            sys.exit()
         else:
             event.ignore()
 

@@ -3,7 +3,7 @@ import time
 
 from PyQt5.QtGui import QFont, QPixmap
 from PyQt5 import QtWidgets
-from PyQt5.QtCore import Qt
+from PyQt5.QtCore import Qt, pyqtSlot
 from PyQt5.QtWidgets import QApplication, QWidget, QLabel, QMessageBox, QPushButton, QLineEdit, QMainWindow, QGroupBox, \
     QGridLayout, QVBoxLayout, QDialog, QHBoxLayout, QListWidget, QScrollBar, QSlider
 
@@ -88,7 +88,7 @@ class BoardField(QLabel):
 
 
 class Piece(QLabel):
-    def __init__(self, parent, is_white: bool, type: str):
+    def __init__(self, parent: 'Chessboard', is_white: bool, type: str):
         super().__init__(parent)
         self.__fen = type.upper() if is_white else type
         self.__parent = parent
@@ -109,7 +109,7 @@ class Piece(QLabel):
         return self.__type
 
     def set_field(self, field):
-        if self.__field is not None:
+        if self.__field is not None and self.__field.has_piece():
             self.__field.remove_piece()
         self.__field = field
         self.setGeometry(int(field.x_pos),
@@ -122,7 +122,7 @@ class Piece(QLabel):
         self.__field = None
 
     def mouseMoveEvent(self, event):
-        if self.__parent.white_bottom_black_top == self.is_white and self.__parent.is_player_turn:
+        if  self.__parent.white_bottom_black_top == self.is_white and self.__parent.is_player_turn:
             pos_x, pos_y = int(event.windowPos().x() - FIELD_SIZE * 0.6), int(
                 event.windowPos().y() - FIELD_SIZE)
             self.raise_()
@@ -143,13 +143,27 @@ class Piece(QLabel):
                         if field == self.__field:
                             break
                         logging.debug(f'Move {self.__field.label} -> {field.label}')
-                        # TODO send move to server and wait for valid move response, maybe use thread lock here and release
-                        # TODO when move is valid but release in Client/server_client.py
+                        msg = {'request_type': 'player_move', 'move': f'{self.__field.label}{field.label}'}
+                        self.__parent.parent.client.send_to_socket(msg)
+                        self.__parent.parent.client.move_lock.acquire()
+                        while self.__parent.parent.client.move_lock.locked():
+                            pass
+                        if not self.__parent.parent.client.last_move_valid:
+                            self.setGeometry(int(self.__field.x_pos),
+                                             int(self.__field.y_pos),
+                                             int(FIELD_SIZE),
+                                             int(FIELD_SIZE))
+                            return
                         moved = True
+                        self.__parent.is_white_move = not self.__parent.is_white_move
+                        self.__parent.is_player_turn = False
+                        move_src = self.__field.label
+                        move_dst = field.label
+                        self.__parent.castle(move_src, move_dst)
                         if field.has_piece():
                             field.remove_piece()
                         field.add_piece(self)
-            print(moved)
+
             if not moved:
                 self.setGeometry(int(self.__field.x_pos),
                                  int(self.__field.y_pos),
@@ -160,16 +174,25 @@ class Piece(QLabel):
 class Chessboard(QWidget):
     def __init__(self, parent=None):
         super().__init__(parent)
+        self.__parent = parent
         self.__white_bottom_black_top = True
         self.__is_player_turn = self.__white_bottom_black_top
         self.setup()
         self.__fields = self.__set_fields()
-        self.reset_pieces()
+        self.__set_fields()
         self.is_white_move = True
+        self.reset_pieces()
+
+    def get_parent(self):
+        return self.__parent
 
     @property
     def fields(self):
         return self.__fields
+
+    @property
+    def parent(self):
+        return self.__parent
 
     @property
     def white_bottom_black_top(self):
@@ -179,9 +202,30 @@ class Chessboard(QWidget):
     def is_player_turn(self):
         return self.__is_player_turn
 
+    @is_player_turn.setter
+    def is_player_turn(self, val):
+        self.__is_player_turn = val
+
+    def castle(self, move_src: str, move_dst: str):
+        print(move_src, move_dst)
+        dst_field = self.find_field(move_src)
+        dst_piece = dst_field.piece
+        if dst_piece.type != 'k':
+            return
+        castling_moves = [('E1', 'G1'), ('E1', 'C1'), ('E8', 'G8'), ('E8', 'C8')]
+        rook_moves = [('H1', 'F1'), ('A1', 'D1'), ('H8', 'F8'), ('A8', 'D8')]
+        # print(((move_src, move_dst) in castling_moves))
+        if (move_src, move_dst) in castling_moves:
+            index = castling_moves.index((move_src, move_dst))
+            rook_move = rook_moves[index]
+            rook_src = self.find_field(rook_move[0])
+            rook_dst = self.find_field(rook_move[1])
+            rook = rook_src.piece
+            rook_src.remove_piece()
+            rook_dst.add_piece(rook)
+
     def change_sides(self, white_bottom_black_top):
         self.__white_bottom_black_top = white_bottom_black_top
-        self.__set_fields()
 
     def find_field(self, label: str):
         field_letter, field_num = label
@@ -198,10 +242,12 @@ class Chessboard(QWidget):
     def play_move(self, src: str, dst: str):
         src_field = self.find_field(src)
         dst_field = self.find_field(dst)
+        self.castle(src, dst)
         if dst_field.has_piece():
             dst_field.remove_piece()
         dst_field.add_piece(src_field.piece)
         self.__is_player_turn = True
+        self.is_white_move = not self.is_white_move
 
     def __set_fields(self):
         fields = []
@@ -212,7 +258,12 @@ class Chessboard(QWidget):
             fields.append(rows)
         return fields
 
+    @pyqtSlot()
     def reset_pieces(self):
+        for i in range(8):
+            for j in range(8):
+                if self.__fields[i][j].has_piece():
+                    self.__fields[i][j].remove_piece()
         pieces = ['rnbqkbnr', 'pppppppp']
         if not self.__white_bottom_black_top:
             pieces[0] = pieces[0][::-1]
@@ -223,3 +274,6 @@ class Chessboard(QWidget):
         for row_num, row in zip(range(6, 8), pieces):
             for col_num, type in zip(range(8), row):
                 self.__fields[row_num][col_num].add_piece(Piece(self, self.__white_bottom_black_top, type))
+
+        self.__is_player_turn = self.__white_bottom_black_top
+        self.is_white_move = True

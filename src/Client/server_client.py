@@ -10,9 +10,10 @@ from time import sleep
 import bcrypt
 
 # CRYPT SETTINGS
-from PyQt5.QtCore import QMetaObject
+from PyQt5.QtCore import QMetaObject, Q_ARG
 from PyQt5.QtCore import Qt
 from PyQt5 import QtCore
+
 salt = b'$2b$12$djq/vdGik/e.nlUWotW6Au'
 
 # LOGGING CONFIG
@@ -24,7 +25,7 @@ PORT = 8888
 
 
 class Client:
-    def __init__(self,parent):
+    def __init__(self, parent):
         self.__username = None
         self.__client_socket = None
         self.__socket_lock = threading.Lock()
@@ -33,13 +34,15 @@ class Client:
         self.__parent = parent
         self.__thread_work = True
         threading.Thread(target=self.__incoming_server_requests_watchdog).start()
+        self.move_lock = threading.Lock()
 
     def shut_down(self):
         self.__thread_work = False
+
     def get_username(self):
         return self.__username
 
-    def set_parent(self,parent):
+    def set_parent(self, parent):
         self.__parent = parent
 
     def get_parent(self):
@@ -74,21 +77,43 @@ class Client:
                         elif msg['type'] == 'ERROR':
                             logging.error(f'AUTH ERROR: {msg["msg"]}')
                             QMetaObject.invokeMethod(self.__parent, "Display_error_login", Qt.QueuedConnection)
+                        elif msg['type'] == "BUSY":
+                            QMetaObject.invokeMethod(self.__parent, "Display_error_busy", Qt.QueuedConnection)
                     else:
                         if msg['type'] == 'OK':
                             logging.info(f'OK')
                             QMetaObject.invokeMethod(self.__parent, "Open_menu", Qt.QueuedConnection)
                         elif msg['type'] == 'ERROR':
                             logging.error(f'{msg["msg"]}')
-                if msg['request_type'] == "start_game":
-                    self.__parent.oponnet_user_name.setText(msg["opponent"])
-                    self.__parent.list_widget.addItem('SYSTEM: Your game against '+msg["opponent"]+' has started')
 
-                    #TODO add color to msg and and funcionality and connect request to cheese board
+                if msg['request_type'] == "start_game":
+                    self.__parent.oponnent_user_name.setText(msg["opponent"])
+                    self.__parent.list_widget.addItem('SYSTEM: Your game against ' + msg["opponent"] + ' has started')
+                    self.__parent.chessboard.change_sides(True if msg["color"] == 'white' else False)
+                    QMetaObject.invokeMethod(
+                        self.__parent.chessboard,
+                        "reset_pieces",
+                        Qt.QueuedConnection)
+                if msg['request_type'] == "start_bot_game":
+                    self.__parent.oponnent_user_name.setText(msg["opponent"])
+                    self.__parent.list_widget.addItem('SYSTEM: Your game against ' + msg["opponent"] + ' has started')
                 if msg['request_type'] == "message":
-                    self.__parent.list_widget.addItem(msg['user']+": "+msg["text"])
+                    self.__parent.list_widget.addItem(msg['user'] + ": " + msg["text"])
                 if msg['request_type'] == "win":
-                    QMetaObject.invokeMethod(self.__parent,'Win',Qt.QueuedConnection)
+                    QMetaObject.invokeMethod(self.__parent, 'Win', Qt.QueuedConnection)
+                if msg['request_type'] == "move_valid":
+                    if msg['valid']:
+                        self.last_move_valid = True
+                    else:
+                        self.last_move_valid = False
+                    self.move_lock.release()
+                if msg['request_type'] == "player_move":
+                    move_src = msg['move'][:2]
+                    move_dst = msg['move'][2:]
+                    self.__parent.chessboard.play_move(move_src, move_dst)
+                if msg['request_type'] == 'resign':
+                    QMetaObject.invokeMethod(self.__parent, 'Resign_confirmed', Qt.QueuedConnection)
+                    self.__parent.list_widget.addItem('SYSTEM: You have resigned')
             time.sleep(sleep_time)
 
     def __read_from_socket(self):
@@ -115,7 +140,7 @@ class Client:
             mess_array.append(msg_dec)
         return mess_array
 
-    def __send_to_socket(self, msg_dict):
+    def send_to_socket(self, msg_dict):
         self.__last_request = msg_dict
         response = json.dumps(msg_dict)
         self.__lock_acquire()
@@ -137,7 +162,7 @@ class Client:
             'email': email,
             'password_hash': str(password_hash)
         }
-        self.__send_to_socket(msg)
+        self.send_to_socket(msg)
 
     def login(self, username, password):
 
@@ -147,30 +172,37 @@ class Client:
             'username': username,
             'password_hash': str(password_hash)
         }
-        self.__send_to_socket(msg)
+        self.send_to_socket(msg)
 
     def find_opponent(self):
-        msg ={
+        msg = {
             'request_type': 'find_opponent',
             'username': self.__username
         }
-        self.__send_to_socket(msg)
-    def play_with_bot(self,color,elo):
+        self.send_to_socket(msg)
+
+    def play_with_bot(self, color, elo):
         msg = {
             'request_type': 'play_with_bot',
             'color': color,
             'elo': elo
         }
-        self.__send_to_socket(msg)
-    def send_messenge(self,text):
+        self.send_to_socket(msg)
+
+    def send_messenge(self, text):
         msg = {
             'request_type': 'message',
             'text': text
         }
-        self.__send_to_socket(msg)
+        self.send_to_socket(msg)
+    def resign(self):
+        msg = {
+            'request_type': 'resign'
+        }
+        self.send_to_socket(msg)
+
 if __name__ == "__main__":
     c = Client()
     c.login('oplamo', 'qwerty')
     while True:
         pass
-

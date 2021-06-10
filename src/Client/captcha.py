@@ -4,7 +4,7 @@ from PyQt5 import QtCore, QtGui, QtWidgets, uic
 from PyQt5.QtGui import QPixmap
 from PyQt5.QtWidgets import QPushButton
 import cv2
-from keras.models import load_model
+# from keras.models import load_model
 import numpy as np
 
 class Captcha(QtWidgets.QMainWindow):
