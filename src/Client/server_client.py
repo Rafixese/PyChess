@@ -77,12 +77,15 @@ class Client:
                         elif msg['type'] == 'ERROR':
                             logging.error(f'AUTH ERROR: {msg["msg"]}')
                             QMetaObject.invokeMethod(self.__parent, "Display_error_login", Qt.QueuedConnection)
+                        elif msg['type'] == "BUSY":
+                            QMetaObject.invokeMethod(self.__parent, "Display_error_busy", Qt.QueuedConnection)
                     else:
                         if msg['type'] == 'OK':
                             logging.info(f'OK')
                             QMetaObject.invokeMethod(self.__parent, "Open_menu", Qt.QueuedConnection)
                         elif msg['type'] == 'ERROR':
                             logging.error(f'{msg["msg"]}')
+
                 if msg['request_type'] == "start_game":
                     self.__parent.oponnent_user_name.setText(msg["opponent"])
                     self.__parent.list_widget.addItem('SYSTEM: Your game against ' + msg["opponent"] + ' has started')
@@ -108,6 +111,9 @@ class Client:
                     move_src = msg['move'][:2]
                     move_dst = msg['move'][2:]
                     self.__parent.chessboard.play_move(move_src, move_dst)
+                if msg['request_type'] == 'resign':
+                    QMetaObject.invokeMethod(self.__parent, 'Resign_confirmed', Qt.QueuedConnection)
+                    self.__parent.list_widget.addItem('SYSTEM: You have resigned')
             time.sleep(sleep_time)
 
     def __read_from_socket(self):
@@ -189,7 +195,11 @@ class Client:
             'text': text
         }
         self.send_to_socket(msg)
-
+    def resign(self):
+        msg = {
+            'request_type': 'resign'
+        }
+        self.send_to_socket(msg)
 
 if __name__ == "__main__":
     c = Client()

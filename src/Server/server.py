@@ -87,14 +87,21 @@ class Server:
                     logging.error(e)
                     client.send_to_socket({'request_type': 'response_to_request', 'type': 'ERROR', 'msg': str(e)})
             elif msg['request_type'] == 'auth_client':
-                try:
-                    usr = auth_client(msg['username'], msg['password_hash'])
-                    client.set_client_usr_name(usr)
-                    client.send_to_socket({'request_type': 'response_to_request', 'type': 'OK', 'username': usr})
-                    client.set_name(msg['username'])
-                except Exception as e:
-                    logging.error(e)
-                    client.send_to_socket({'request_type': 'response_to_request', 'type': 'ERROR', 'msg': str(e)})
+                client_exist = False
+                for i in self.__clients:
+                    if i.get_username() == msg['username']:
+                        client_exist = True
+                        client.send_to_socket({'request_type': 'response_to_request','type': 'BUSY'})
+                        break
+                if not client_exist:
+                    try:
+                        usr = auth_client(msg['username'], msg['password_hash'])
+                        client.set_client_usr_name(usr)
+                        client.send_to_socket({'request_type': 'response_to_request', 'type': 'OK', 'username': usr})
+                        client.set_name(msg['username'])
+                    except Exception as e:
+                        logging.error(e)
+                        client.send_to_socket({'request_type': 'response_to_request', 'type': 'ERROR', 'msg': str(e)})
             elif msg['request_type'] == 'find_opponent':
                 # setup game
                 try:
@@ -122,6 +129,15 @@ class Server:
                     if is_valid:
                         game.make_move(msg['move'])
 
+            elif msg['request_type'] == 'resign':
+
+                for i in self.__games:
+                    if i.check_logout(client):
+                        self.__games.remove(i)
+                for i in self.__bot_games:
+                    if i.is_client_in_game(client):
+                        self.__bot_games.remove(i)
+                client.send_to_socket({'request_type': 'resign'})
             time.sleep(sleep_time)
 
 

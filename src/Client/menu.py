@@ -37,7 +37,7 @@ class Menu(QDialog):
         layout.addWidget(online, 3, 10, 1, 4)
         layout.addWidget(chat, 4, 10, 5, 4)
         # Miejsce na szachownice starczy podmnieć obiekt guzika Ważne żeby zachować numerki ewentualnie zmienićna 1, 1 9,9 żeby było równo
-        self.oponnent_user_name = QLabel('Player spaceholder')
+        self.oponnent_user_name = QLabel('')
         layout.addWidget(self.oponnent_user_name, 0, 0, 1, 10, alignment=Qt.AlignRight)
         self.chessboard = Chessboard(self)
         layout.addWidget(self.chessboard, 1, 0, 9, 10)
@@ -80,13 +80,16 @@ class Menu(QDialog):
         vbox.addWidget(self.b, 3, 1)
         self.play = QPushButton("Play")
         self.play.clicked.connect(self.Play_with_bot)
+        self.resign = QPushButton("Resign")
+        self.resign.clicked.connect(self.Resign)
         vbox.addWidget(QLabel(), 4, 0, 1, 1)
         vbox.addWidget(self.play, 5, 3, 1, 1)
+        vbox.addWidget(self.resign,5,0,1,1)
         # Gra online
         vbox1 = QVBoxLayout()
         online.setLayout(vbox1)
 
-        self.find_button = QPushButton('Find opponet')
+        self.find_button = QPushButton('Find opponent')
         self.find_button.clicked.connect(self.Find_opponent)
         vbox1.addWidget(self.find_button)
 
@@ -128,7 +131,7 @@ class Menu(QDialog):
             self.white = not self.white
 
     def Find_opponent(self):
-        if self.in_game == False:
+        if not self.in_game:
             self.client.find_opponent()
             self.in_game = True
             self.list_widget.addItem("SYSTEM: Looking for game")
@@ -136,10 +139,10 @@ class Menu(QDialog):
     def Play_with_bot(self):
         if not self.in_game:
             self.client.play_with_bot('white' if self.white else 'black', self.elo.text())
-
             self.chessboard.change_sides(self.white)
             self.chessboard.reset_pieces()
             self.in_game = True
+
 
     def Send_message(self):
         if self.text_messenge.text().strip() == "":
@@ -148,6 +151,11 @@ class Menu(QDialog):
             self.list_widget.addItem("You: " + self.text_messenge.text())
             self.client.send_messenge(self.text_messenge.text())
             self.text_messenge.setText("")
+
+    @pyqtSlot()
+    def Resign_confirmed(self):
+        self.in_game = False
+        QMessageBox.warning(self, "Lost", "You have resigned", QMessageBox.Ok)
 
     @pyqtSlot()
     def Win(self):
@@ -172,3 +180,8 @@ class Menu(QDialog):
             sys.exit()
         else:
             event.ignore()
+
+    def Resign(self):
+        if self.in_game:
+            self.client.resign()
+            self.in_game = False

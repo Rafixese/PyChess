@@ -15,10 +15,10 @@ class Game_with_Player:
         msg = {
             'request_type': 'win'
         }
-        if client == self.__client:
+        if client == self.__client and self.__client2 != None:
             self.__client2.send_to_socket(msg)
             return True
-        if client == self.__client2:
+        if client == self.__client2 and self.__client != None:
             self.__client.send_to_socket(msg)
             return True
         return False

@@ -122,7 +122,7 @@ class Piece(QLabel):
         self.__field = None
 
     def mouseMoveEvent(self, event):
-        if self.__parent.white_bottom_black_top == self.is_white and self.__parent.is_player_turn:
+        if  self.__parent.white_bottom_black_top == self.is_white and self.__parent.is_player_turn:
             pos_x, pos_y = int(event.windowPos().x() - FIELD_SIZE * 0.6), int(
                 event.windowPos().y() - FIELD_SIZE)
             self.raise_()
@@ -183,6 +183,9 @@ class Chessboard(QWidget):
         self.is_white_move = True
         self.reset_pieces()
 
+    def get_parent(self):
+        return self.__parent
+
     @property
     def fields(self):
         return self.__fields
@@ -211,7 +214,7 @@ class Chessboard(QWidget):
             return
         castling_moves = [('E1', 'G1'), ('E1', 'C1'), ('E8', 'G8'), ('E8', 'C8')]
         rook_moves = [('H1', 'F1'), ('A1', 'D1'), ('H8', 'F8'), ('A8', 'D8')]
-        print(((move_src, move_dst) in castling_moves))
+        # print(((move_src, move_dst) in castling_moves))
         if (move_src, move_dst) in castling_moves:
             index = castling_moves.index((move_src, move_dst))
             rook_move = rook_moves[index]
