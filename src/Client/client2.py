@@ -170,14 +170,14 @@ class Login(QtWidgets.QMainWindow):
                 QMessageBox.warning(self, "Register error", "To short password", QMessageBox.Ok)
             elif "@" not in self.in_mail.text():
                 QMessageBox.warning(self, "Register error", "Incorrect e-mail", QMessageBox.Ok)
-            # else:
-            #     if self.cap == None:
-            #         self.cap = Captcha(self)
-            #     else:
-            #         if self.cap.isHidden():
-            #             self.cap.show()
-            #         else:
-            #             QMessageBox.warning(self, "Captcha", "Captcha error", QMessageBox.Ok)
+            else:
+                if self.cap == None:
+                    self.cap = Captcha(self)
+                else:
+                    if self.cap.isHidden():
+                        self.cap.show()
+                    else:
+                        QMessageBox.warning(self, "Captcha", "Captcha error", QMessageBox.Ok)
 
     @pyqtSlot()
     def Display_error_login(self):
