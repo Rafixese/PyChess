@@ -31,8 +31,11 @@ class Client:
         self.__connect_to_server()
         self.__last_request = None
         self.__parent = parent
+        self.__thread_work = True
         threading.Thread(target=self.__incoming_server_requests_watchdog).start()
 
+    def shut_down(self):
+        self.__thread_work = False
     def get_username(self):
         return self.__username
 
@@ -52,7 +55,7 @@ class Client:
 
     def __incoming_server_requests_watchdog(self):
         sleep_time = 0.1
-        while True:
+        while self.__thread_work:
             msg_arr = self.__read_from_socket()
             if msg_arr is None:
                 time.sleep(sleep_time)
@@ -79,10 +82,13 @@ class Client:
                             logging.error(f'{msg["msg"]}')
                 if msg['request_type'] == "start_game":
                     self.__parent.oponnet_user_name.setText(msg["opponent"])
-                    #TODO go
+                    self.__parent.list_widget.addItem('SYSTEM: Your game against '+msg["opponent"]+' has started')
+
+                    #TODO add color to msg and and funcionality and connect request to cheese board
                 if msg['request_type'] == "message":
                     self.__parent.list_widget.addItem(msg['user']+": "+msg["text"])
-
+                if msg['request_type'] == "win":
+                    QMetaObject.invokeMethod(self.__parent,'Win',Qt.QueuedConnection)
             time.sleep(sleep_time)
 
     def __read_from_socket(self):
@@ -162,7 +168,6 @@ class Client:
             'text': text
         }
         self.__send_to_socket(msg)
-# TODO get rid of it
 if __name__ == "__main__":
     c = Client()
     c.login('oplamo', 'qwerty')

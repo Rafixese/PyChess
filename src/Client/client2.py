@@ -22,8 +22,9 @@ class Login(QtWidgets.QMainWindow):
         self.reg_show_bool = True
         self.InitWindow_login()
         self.InitWindow_register()
-        self.Client = Client(self)
+        self.client = Client(self)
         self.cap = None
+
 
     def InitWindow_login(self):
         self.log_text = QLabel(self)
@@ -161,7 +162,7 @@ class Login(QtWidgets.QMainWindow):
 
     def Switch_to_menu(self):
         if self.login == True:
-            self.Client.login(self.in_login.text(), self.in_password_login.text())
+            self.client.login(self.in_login.text(), self.in_password_login.text())
 
         else:
             if len(self.in_user.text()) > 20 or len(self.in_user.text()) < 5:
@@ -185,12 +186,25 @@ class Login(QtWidgets.QMainWindow):
 
     @pyqtSlot()
     def Open_menu(self):
-        self.a = Menu(self.Client)
-        self.Client.set_parent(self.a)
-        self.hide()
+        self.a = Menu(self.client)
+        self.client.set_parent(self.a)
+        self.destroy()
 
     def Register(self):
-        self.Client.register_user(self.in_user.text(), self.in_mail.text(), self.in_password_register.text())
+        self.client.register_user(self.in_user.text(), self.in_mail.text(), self.in_password_register.text())
+
+    def closeEvent(self, event):
+        close = QMessageBox()
+        close.setText("You sure?")
+        close.setStandardButtons(QMessageBox.Yes | QMessageBox.Cancel)
+        close = close.exec()
+
+        if close == QMessageBox.Yes:
+            event.accept()
+            self.client.shut_down()
+            self.destroy()
+        else:
+            event.ignore()
 
 if __name__ == "__main__":
     App = QApplication(sys.argv)
