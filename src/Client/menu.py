@@ -39,7 +39,7 @@ class Menu(QDialog):
         # Miejsce na szachownice starczy podmnieć obiekt guzika Ważne żeby zachować numerki ewentualnie zmienićna 1, 1 9,9 żeby było równo
         self.oponnent_user_name = QLabel('Player spaceholder')
         layout.addWidget(self.oponnent_user_name, 0, 0, 1, 10, alignment=Qt.AlignRight)
-        self.chessboard = Chessboard()
+        self.chessboard = Chessboard(self)
         layout.addWidget(self.chessboard, 1, 0, 9, 10)
         self.user_name = QLabel(self.client.get_username())
         layout.addWidget(self.user_name, 10, 0, 1, 10, alignment=Qt.AlignRight)
@@ -134,23 +134,30 @@ class Menu(QDialog):
             self.list_widget.addItem("SYSTEM: Looking for game")
 
     def Play_with_bot(self):
-        if self.white:
-            self.client.play_with_bot("white", self.elo.text())
-        else:
-            self.client.play_with_bot("black", self.elo.text())
+        if not self.in_game:
+            self.client.play_with_bot('white' if self.white else 'black', self.elo.text())
+
+            self.chessboard.change_sides(self.white)
+            self.chessboard.reset_pieces()
+            self.in_game = True
 
     def Send_message(self):
         if self.text_messenge.text().strip() == "":
             pass
         else:
-            self.list_widget.addItem("Ja: " + self.text_messenge.text())
+            self.list_widget.addItem("You: " + self.text_messenge.text())
             self.client.send_messenge(self.text_messenge.text())
             self.text_messenge.setText("")
 
     @pyqtSlot()
     def Win(self):
         self.in_game = False
-        QMessageBox.warning(self, "Win", "Congratulation you won game", QMessageBox.Ok)
+        QMessageBox.warning(self, "Win", "Congratulations, you won the game", QMessageBox.Ok)
+
+    @pyqtSlot()
+    def lost(self):
+        self.in_game = False
+        QMessageBox.warning(self, "Lost", "You lost the game", QMessageBox.Ok)
 
     def closeEvent(self, event):
         close = QMessageBox()

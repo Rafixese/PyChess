@@ -88,7 +88,7 @@ class BoardField(QLabel):
 
 
 class Piece(QLabel):
-    def __init__(self, parent, is_white: bool, type: str):
+    def __init__(self, parent: 'Chessboard', is_white: bool, type: str):
         super().__init__(parent)
         self.__fen = type.upper() if is_white else type
         self.__parent = parent
@@ -143,13 +143,23 @@ class Piece(QLabel):
                         if field == self.__field:
                             break
                         logging.debug(f'Move {self.__field.label} -> {field.label}')
-                        # TODO send move to server and wait for valid move response, maybe use thread lock here and release
-                        # TODO when move is valid but release in Client/server_client.py
+                        msg = {'request_type': 'player_move', 'move': f'{self.__field.label}{field.label}'}
+                        self.__parent.parent.client.send_to_socket(msg)
+                        self.__parent.parent.client.move_lock.acquire()
+                        while self.__parent.parent.client.move_lock.locked():
+                            pass
+                        if not self.__parent.parent.client.last_move_valid:
+                            self.setGeometry(int(self.__field.x_pos),
+                                             int(self.__field.y_pos),
+                                             int(FIELD_SIZE),
+                                             int(FIELD_SIZE))
+                            return
                         moved = True
+                        self.__parent.is_white_move = not self.__parent.is_white_move
+                        self.__parent.is_player_turn = False
                         if field.has_piece():
                             field.remove_piece()
                         field.add_piece(self)
-            print(moved)
             if not moved:
                 self.setGeometry(int(self.__field.x_pos),
                                  int(self.__field.y_pos),
@@ -160,6 +170,7 @@ class Piece(QLabel):
 class Chessboard(QWidget):
     def __init__(self, parent=None):
         super().__init__(parent)
+        self.__parent = parent
         self.__white_bottom_black_top = True
         self.__is_player_turn = self.__white_bottom_black_top
         self.setup()
@@ -173,12 +184,20 @@ class Chessboard(QWidget):
         return self.__fields
 
     @property
+    def parent(self):
+        return self.__parent
+
+    @property
     def white_bottom_black_top(self):
         return self.__white_bottom_black_top
 
     @property
     def is_player_turn(self):
         return self.__is_player_turn
+
+    @is_player_turn.setter
+    def is_player_turn(self, val):
+        self.__is_player_turn = val
 
     def change_sides(self, white_bottom_black_top):
         self.__white_bottom_black_top = white_bottom_black_top
@@ -202,6 +221,7 @@ class Chessboard(QWidget):
             dst_field.remove_piece()
         dst_field.add_piece(src_field.piece)
         self.__is_player_turn = True
+        self.is_white_move = not self.is_white_move
 
     def __set_fields(self):
         fields = []
@@ -228,3 +248,6 @@ class Chessboard(QWidget):
         for row_num, row in zip(range(6, 8), pieces):
             for col_num, type in zip(range(8), row):
                 self.__fields[row_num][col_num].add_piece(Piece(self, self.__white_bottom_black_top, type))
+
+        self.__is_player_turn = self.__white_bottom_black_top
+        self.is_white_move = True
