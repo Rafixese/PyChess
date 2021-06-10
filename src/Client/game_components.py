@@ -3,7 +3,7 @@ import time
 
 from PyQt5.QtGui import QFont, QPixmap
 from PyQt5 import QtWidgets
-from PyQt5.QtCore import Qt
+from PyQt5.QtCore import Qt, pyqtSlot
 from PyQt5.QtWidgets import QApplication, QWidget, QLabel, QMessageBox, QPushButton, QLineEdit, QMainWindow, QGroupBox, \
     QGridLayout, QVBoxLayout, QDialog, QHBoxLayout, QListWidget, QScrollBar, QSlider
 
@@ -164,8 +164,9 @@ class Chessboard(QWidget):
         self.__is_player_turn = self.__white_bottom_black_top
         self.setup()
         self.__fields = self.__set_fields()
-        self.reset_pieces()
+        self.__set_fields()
         self.is_white_move = True
+        self.reset_pieces()
 
     @property
     def fields(self):
@@ -181,7 +182,6 @@ class Chessboard(QWidget):
 
     def change_sides(self, white_bottom_black_top):
         self.__white_bottom_black_top = white_bottom_black_top
-        self.__set_fields()
 
     def find_field(self, label: str):
         field_letter, field_num = label
@@ -212,7 +212,12 @@ class Chessboard(QWidget):
             fields.append(rows)
         return fields
 
+    @pyqtSlot()
     def reset_pieces(self):
+        for i in range(8):
+            for j in range(8):
+                if self.__fields[i][j].has_piece():
+                    self.__fields[i][j].remove_piece()
         pieces = ['rnbqkbnr', 'pppppppp']
         if not self.__white_bottom_black_top:
             pieces[0] = pieces[0][::-1]

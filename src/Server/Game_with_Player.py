@@ -1,4 +1,5 @@
 from src.Server.server_client import Client
+import random
 
 
 class Game_with_Player:
@@ -10,7 +11,7 @@ class Game_with_Player:
         self.__client2 = client2
         self.start_game()
 
-    def check_logout(self,client):
+    def check_logout(self, client):
         msg = {
             'request_type': 'win'
         }
@@ -21,7 +22,8 @@ class Game_with_Player:
             self.__client.send_to_socket(msg)
             return True
         return False
-    def check_if_player_in(self,client,mess):
+
+    def check_if_player_in(self, client, mess):
         msg = {
             'request_type': 'message',
             'text': mess,
@@ -33,14 +35,16 @@ class Game_with_Player:
             self.__client.send_to_socket(msg)
 
     def start_game(self):
-        #TODO add color to request
+        color = random.randint(0, 1)
         msg = {
             'request_type': 'start_game',
-            'opponent': self.__client2.get_username()
+            'opponent': self.__client2.get_username(),
+            'color': 'white' if color else 'black'
         }
         msg2 = {
             'request_type': 'start_game',
-            'opponent': self.__client.get_username()
+            'opponent': self.__client.get_username(),
+            'color': 'black' if color else 'white'
         }
         self.__client.send_to_socket(msg)
         self.__client2.send_to_socket(msg2)

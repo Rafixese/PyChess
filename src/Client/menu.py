@@ -37,9 +37,10 @@ class Menu(QDialog):
         layout.addWidget(online, 3, 10, 1, 4)
         layout.addWidget(chat, 4, 10, 5, 4)
         # Miejsce na szachownice starczy podmnieć obiekt guzika Ważne żeby zachować numerki ewentualnie zmienićna 1, 1 9,9 żeby było równo
-        self.oponnet_user_name = QLabel('Player spaceholder')
-        layout.addWidget(self.oponnet_user_name, 0, 0, 1, 10, alignment=Qt.AlignRight)
-        layout.addWidget(Chessboard(), 1, 0, 9, 10)
+        self.oponnent_user_name = QLabel('Player spaceholder')
+        layout.addWidget(self.oponnent_user_name, 0, 0, 1, 10, alignment=Qt.AlignRight)
+        self.chessboard = Chessboard()
+        layout.addWidget(self.chessboard, 1, 0, 9, 10)
         self.user_name = QLabel(self.client.get_username())
         layout.addWidget(self.user_name, 10, 0, 1, 10, alignment=Qt.AlignRight)
         layout.setRowStretch(0, 1)
@@ -148,6 +149,7 @@ class Menu(QDialog):
 
     @pyqtSlot()
     def Win(self):
+        self.in_game = False
         QMessageBox.warning(self, "Win", "Congratulation you won game", QMessageBox.Ok)
 
     def closeEvent(self, event):

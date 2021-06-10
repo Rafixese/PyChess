@@ -10,7 +10,7 @@ from time import sleep
 import bcrypt
 
 # CRYPT SETTINGS
-from PyQt5.QtCore import QMetaObject
+from PyQt5.QtCore import QMetaObject, Q_ARG
 from PyQt5.QtCore import Qt
 from PyQt5 import QtCore
 salt = b'$2b$12$djq/vdGik/e.nlUWotW6Au'
@@ -81,10 +81,13 @@ class Client:
                         elif msg['type'] == 'ERROR':
                             logging.error(f'{msg["msg"]}')
                 if msg['request_type'] == "start_game":
-                    self.__parent.oponnet_user_name.setText(msg["opponent"])
+                    self.__parent.oponnent_user_name.setText(msg["opponent"])
                     self.__parent.list_widget.addItem('SYSTEM: Your game against '+msg["opponent"]+' has started')
-
-                    #TODO add color to msg and and funcionality and connect request to cheese board
+                    self.__parent.chessboard.change_sides(True if msg["color"] == 'white' else False)
+                    QMetaObject.invokeMethod(
+                        self.__parent.chessboard,
+                        "reset_pieces",
+                        Qt.QueuedConnection)
                 if msg['request_type'] == "message":
                     self.__parent.list_widget.addItem(msg['user']+": "+msg["text"])
                 if msg['request_type'] == "win":
