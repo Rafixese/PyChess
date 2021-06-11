@@ -101,6 +101,10 @@ class Client:
                     self.__parent.list_widget.addItem(msg['user'] + ": " + msg["text"])
                 if msg['request_type'] == "win":
                     QMetaObject.invokeMethod(self.__parent, 'Win', Qt.QueuedConnection)
+                if msg['request_type'] == "lose":
+                    QMetaObject.invokeMethod(self.__parent, 'lost', Qt.QueuedConnection)
+                if msg['request_type'] == "stealmate":
+                    QMetaObject.invokeMethod(self.__parent, 'stealmate', Qt.QueuedConnection)
                 if msg['request_type'] == "move_valid":
                     if msg['valid']:
                         self.last_move_valid = True

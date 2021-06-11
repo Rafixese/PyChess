@@ -54,17 +54,17 @@ class Menu(QDialog):
         self.slider = QSlider(Qt.Horizontal)
         self.slider.setFocusPolicy(Qt.StrongFocus)
         self.slider.setTickPosition(QSlider.TicksBothSides)
-        self.slider.setMinimum(300)
-        self.slider.setMaximum(3000)
+        self.slider.setMinimum(1)
+        self.slider.setMaximum(20)
         self.slider.setTickInterval(100)
-        self.slider.setValue(1000)
+        self.slider.setValue(5)
         self.slider.valueChanged.connect(self.Change_elo)
 
         self.dif = QLabel("Select difficulty")
         self.dif.setFont(QFont('Arial', 20))
         vbox.addWidget(self.dif, 0, 0, 1, 2)
         vbox.addWidget(self.slider, 1, 0, 1, 2)
-        self.elo = QLabel("1000 ")
+        self.elo = QLabel(" 5 ")
         self.elo.setFont(QFont('Arial', 20))
         vbox.addWidget(self.elo, 1, 3, 1, 1)
         label = QLabel("Select color of pieces")
@@ -183,6 +183,11 @@ class Menu(QDialog):
     def Win(self):
         self.in_game = False
         QMessageBox.warning(self, "Win", "Congratulations, you won the game", QMessageBox.Ok)
+
+    @pyqtSlot()
+    def stealmate(self):
+        self.in_game = False
+        QMessageBox.warning(self, "Stealmate", "Congratulations, you played yourself.", QMessageBox.Ok)
 
     @pyqtSlot()
     def lost(self):
