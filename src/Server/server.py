@@ -29,8 +29,8 @@ class Server:
         self.__server_socket.listen(9999)
         self.__clients = []
         self.__is_someone_waiting = False
-        self.__games = []
-        self.__bot_games = []
+        self.games = []
+        self.bot_games = []
         threading.Thread(target=self.__accept_loop).start()
 
     def __accept_loop(self):
@@ -41,14 +41,14 @@ class Server:
             threading.Thread(target=self.__client_thread, args=(client_sock,)).start()
 
     def __remove_from_games(self, client):
-        for i in self.__games:
+        for i in self.games:
             if i.check_logout(client):
                 logging.debug(f'Removing game {i}')
-                self.__games.remove(i)
-        for game in self.__bot_games:
+                self.games.remove(i)
+        for game in self.bot_games:
             if game.is_client_in_game(client):
                 logging.debug(f'Removing game {game}')
-                self.__bot_games.remove(game)
+                self.bot_games.remove(game)
 
     def __client_thread(self, client_sock):
         sleep_time = 0.1
@@ -107,27 +107,27 @@ class Server:
                 try:
                     if self.__is_someone_waiting:
                         self.__is_someone_waiting = False
-                        self.__games[-1].set_clinet2(client)
+                        self.games[-1].set_clinet2(client)
                     else:
-                        g = Game_with_Player(client)
+                        g = Game_with_Player(client, self)
                         self.__is_someone_waiting = True
-                        self.__games.append(g)
+                        self.games.append(g)
                 except:
                     pass
 
             elif msg['request_type'] == 'play_with_bot':
                 print(msg['color'], msg['elo'])
-                game = BotGame(client, msg['color'], msg['elo'])
-                self.__bot_games.append(game)
+                game = BotGame(client, msg['color'], msg['elo'], self)
+                self.bot_games.append(game)
             elif msg['request_type'] == 'message':
-                for i in self.__games:
+                for i in self.games:
                     i.check_if_player_in(client, msg['text'])
             elif msg['request_type'] == 'player_move':
-                for game in self.__games + self.__bot_games:
+                for game in self.games + self.bot_games:
                     is_valid = game.check_move(msg['move'])
                     client.send_to_socket({'request_type': 'move_valid', 'valid': is_valid})
                     if is_valid:
-                        if game in self.__bot_games:
+                        if game in self.bot_games:
                             sleep(sleep_time*2)
                             game.make_move(msg['move'])
                         else:
@@ -139,12 +139,12 @@ class Server:
                             game.make_move(msg['move'])
                             oponnent.send_to_socket({'request_type': 'player_move', 'move': msg['move']})
             elif msg['request_type'] == 'resign':
-                for i in self.__games:
+                for i in self.games:
                     if i.check_logout(client):
-                        self.__games.remove(i)
-                for i in self.__bot_games:
+                        self.games.remove(i)
+                for i in self.bot_games:
                     if i.is_client_in_game(client):
-                        self.__bot_games.remove(i)
+                        self.bot_games.remove(i)
                 client.send_to_socket({'request_type': 'resign'})
             time.sleep(sleep_time)
 
