@@ -1,4 +1,4 @@
-from PyQt5.QtGui import QFont
+from PyQt5.QtGui import QFont,QIcon
 from PyQt5 import QtWidgets
 from PyQt5.QtCore import Qt, pyqtSlot
 from PyQt5.QtWidgets import QApplication, QWidget, QLabel, QMessageBox, QPushButton, QLineEdit, QMainWindow, QGroupBox, \
@@ -111,6 +111,28 @@ class Menu(QDialog):
         vbox2.addWidget(self.send_messenge, 1, 1)
 
         # przykladowe wiadomosci dodane
+
+    def Pawn_promotion(self):
+        self.queen = QPushButton()
+        self.queen.setIcon(QIcon('Pieces/Chess_qdt60.png'))
+        self.queen.setGeometry(30, 30, 100, 100)
+        self.rook = QPushButton()
+        self.rook.setIcon(QIcon('Pieces/Chess_qdt60.png'))
+        self.rook.setGeometry(30, 30, 100, 100)
+
+        self.knight = QPushButton()
+        self.knight.setIcon(QIcon('Pieces/Chess_qdt60.png'))
+        self.knight.setGeometry(30, 30, 100, 100)
+
+        self.bishop = QPushButton()
+        self.bishop.setIcon(QIcon('Pieces/Chess_qdt60.png'))
+        self.bishop.setGeometry(30, 30, 100, 100)
+
+        self.layout.addWidget(self.rook, 0, 0)
+        self.layout.addWidget(self.queen, 0, 1)
+        self.layout.addWidget(self.knight, 0, 2)
+        self.layout.addWidget(self.bishop, 0, 3)
+        
 
     def Change_elo(self):
         if self.slider.value() >= 1000:

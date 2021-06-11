@@ -108,9 +108,13 @@ class Client:
                         self.last_move_valid = False
                     self.move_lock.release()
                 if msg['request_type'] == "player_move":
+                    promotion = None
                     move_src = msg['move'][:2]
-                    move_dst = msg['move'][2:]
-                    self.__parent.chessboard.play_move(move_src, move_dst)
+                    move_dst = msg['move'][2:4]
+                    if len(msg['move']) == 5:
+                        promotion = msg['move'][4]
+
+                    self.__parent.chessboard.play_move(move_src, move_dst,promotion)
                 if msg['request_type'] == 'resign':
                     QMetaObject.invokeMethod(self.__parent, 'Resign_confirmed', Qt.QueuedConnection)
                     self.__parent.list_widget.addItem('SYSTEM: You have resigned')
