@@ -104,6 +104,7 @@ class Piece(QLabel):
         self.setPixmap(pixmap)
         self.show()
 
+
     def change_type(self, promotion):
         self.__type = promotion
         path = pathlib.Path(f'Pieces/Chess_{self.__type}{"lt" if self.__is_white else "dt"}60.png')
@@ -155,7 +156,15 @@ class Piece(QLabel):
                             if field == self.__field:
                                 break
                             logging.debug(f'Move {self.__field.label} -> {field.label}')
-                            msg = {'request_type': 'player_move', 'move': f'{self.__field.label}{field.label}'}
+                            move_src = self.__field.label
+                            move_dst = field.label
+                            is_promotion = False
+                            if self.__type == 'p' and (move_dst[1] == '8' or move_dst[1] == '1'):
+                                #TODO Wyslwietlic opcje wyboru
+                                is_promotion = True
+                                msg = {'request_type': 'player_move', 'move': f'{self.__field.label}{field.label}Q'}
+                            else:
+                                msg = {'request_type': 'player_move', 'move': f'{self.__field.label}{field.label}'}
                             self.__parent.parent.client.send_to_socket(msg)
                             self.__parent.parent.client.move_lock.acquire()
                             while self.__parent.parent.client.move_lock.locked():
@@ -167,10 +176,12 @@ class Piece(QLabel):
                                                  int(FIELD_SIZE))
                                 return
                             moved = True
+
+                            if is_promotion:
+                                self.change_type(promotion='q')
+                                #TODO zmienic hard type
                             self.__parent.is_white_move = not self.__parent.is_white_move
                             self.__parent.is_player_turn = False
-                            move_src = self.__field.label
-                            move_dst = field.label
                             self.__parent.castle(move_src, move_dst)
                             if field.has_piece():
                                 field.remove_piece()

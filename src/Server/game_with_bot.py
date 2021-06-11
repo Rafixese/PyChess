@@ -24,6 +24,7 @@ class BotGame:
             path = pathlib.Path(os.getcwd()).joinpath('stockfish_13_win_x64_bmi2/stockfish_13_win_x64_bmi2.exe')
         self.stockfish = Stockfish(str(path))
         self.stockfish.set_elo_rating(self.elo)
+
         print(self.stockfish.get_board_visual())
         if self.client_color == "black":
             sleep(2)
@@ -46,7 +47,9 @@ class BotGame:
 
     def make_bot_move(self):
         self.stockfish.set_position(self.moves)
-        best_move = self.stockfish.get_best_move()
+        self.stockfish.set_elo_rating(self.elo)
+        self.stockfish.set_depth(int(self.elo/150))
+        best_move = self.stockfish.get_best_move_time(self.elo)
         print(best_move)
         self.moves.append(best_move)
         self.stockfish.set_position(self.moves)
