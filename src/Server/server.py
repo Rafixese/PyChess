@@ -108,7 +108,6 @@ class Server:
                     if self.__is_someone_waiting:
                         self.__is_someone_waiting = False
                         self.__games[-1].set_clinet2(client)
-
                     else:
                         g = Game_with_Player(client)
                         self.__is_someone_waiting = True
@@ -128,11 +127,18 @@ class Server:
                     is_valid = game.check_move(msg['move'])
                     client.send_to_socket({'request_type': 'move_valid', 'valid': is_valid})
                     if is_valid:
-                        sleep(sleep_time*2)
+                        if game in self.__bot_games:
+                            sleep(sleep_time*2)
+                            game.make_move(msg['move'])
+                        else:
+                            sleep(sleep_time * 2)
+                            if client == game.get_client():
+                                oponnent = game.get_client2()
+                            else:
+                                oponnent = game.get_client()
                         game.make_move(msg['move'])
-
+                        oponnent.send_to_socket({'request_type': 'player_move', 'move': msg['move']})
             elif msg['request_type'] == 'resign':
-
                 for i in self.__games:
                     if i.check_logout(client):
                         self.__games.remove(i)

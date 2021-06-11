@@ -9,7 +9,6 @@ class BotGame:
         self.client = client
         self.client_color = client_color
         self.elo = int(elo)
-        print('dupa')
         msg = {
             'request_type': 'start_bot_game',
             'opponent': f'BOT({self.elo})',
