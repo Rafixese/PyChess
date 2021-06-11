@@ -5,7 +5,7 @@ import sys
 from src.Client.menu import Menu
 from src.Client.server_client import Client
 from PyQt5.QtCore import pyqtSlot
-# from src.Client.captcha import Captcha
+from src.Client.captcha import Captcha
 import numpy as np
 
 class Login(QtWidgets.QMainWindow):
