@@ -2,7 +2,7 @@ from stockfish.models import Stockfish
 import platform
 import pathlib
 import os
-
+from time import sleep
 
 class BotGame:
     def __init__(self, client, client_color, elo):
@@ -25,6 +25,10 @@ class BotGame:
         self.stockfish = Stockfish(str(path))
         self.stockfish.set_elo_rating(self.elo)
         print(self.stockfish.get_board_visual())
+        if self.client_color == "black":
+            sleep(2)
+            self.make_bot_move()
+
 
     def is_client_in_game(self, client):
         return self.client == client

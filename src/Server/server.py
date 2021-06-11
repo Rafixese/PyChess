@@ -115,6 +115,7 @@ class Server:
                         self.__games.append(g)
                 except:
                     pass
+
             elif msg['request_type'] == 'play_with_bot':
                 print(msg['color'], msg['elo'])
                 game = BotGame(client, msg['color'], msg['elo'])
@@ -127,6 +128,7 @@ class Server:
                     is_valid = game.check_move(msg['move'])
                     client.send_to_socket({'request_type': 'move_valid', 'valid': is_valid})
                     if is_valid:
+                        sleep(sleep_time*2)
                         game.make_move(msg['move'])
 
             elif msg['request_type'] == 'resign':
