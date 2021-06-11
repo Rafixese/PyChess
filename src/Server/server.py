@@ -136,8 +136,8 @@ class Server:
                                 oponnent = game.get_client2()
                             else:
                                 oponnent = game.get_client()
-                        game.make_move(msg['move'])
-                        oponnent.send_to_socket({'request_type': 'player_move', 'move': msg['move']})
+                            game.make_move(msg['move'])
+                            oponnent.send_to_socket({'request_type': 'player_move', 'move': msg['move']})
             elif msg['request_type'] == 'resign':
                 for i in self.__games:
                     if i.check_logout(client):
