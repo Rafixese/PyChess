@@ -8,6 +8,7 @@ from PyQt5.QtCore import pyqtSlot
 # from src.Client.captcha import Captcha
 import numpy as np
 
+
 class Login(QtWidgets.QMainWindow):
     def __init__(self):
         super().__init__()
@@ -23,7 +24,6 @@ class Login(QtWidgets.QMainWindow):
         self.InitWindow_register()
         self.client = Client(self)
         self.cap = None
-
 
     def InitWindow_login(self):
         self.log_text = QLabel(self)
@@ -195,6 +195,7 @@ class Login(QtWidgets.QMainWindow):
 
     def Register(self):
         self.client.register_user(self.in_user.text(), self.in_mail.text(), self.in_password_register.text())
+
     def closeEvent(self, event):
         close = QMessageBox()
         close.setText("You wanna close game?")
@@ -208,6 +209,7 @@ class Login(QtWidgets.QMainWindow):
             sys.exit()
         else:
             event.ignore()
+
 
 if __name__ == "__main__":
     App = QApplication(sys.argv)

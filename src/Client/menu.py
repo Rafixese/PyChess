@@ -1,6 +1,6 @@
-from PyQt5.QtGui import QFont,QIcon
+from PyQt5.QtGui import QFont, QIcon
 from PyQt5 import QtWidgets
-from PyQt5.QtCore import Qt, pyqtSlot
+from PyQt5.QtCore import Qt, pyqtSlot, QSize
 from PyQt5.QtWidgets import QApplication, QWidget, QLabel, QMessageBox, QPushButton, QLineEdit, QMainWindow, QGroupBox, \
     QGridLayout, QVBoxLayout, QDialog, QHBoxLayout, QListWidget, QScrollBar, QSlider
 import sys
@@ -23,6 +23,7 @@ class Menu(QDialog):
     def Init_window(self):
         self.setWindowTitle(self.title)
         self.setFixedSize(self.width, self.height)
+
         self.Grid()
         self.show()
 
@@ -36,7 +37,7 @@ class Menu(QDialog):
         layout.addWidget(bot, 0, 10, 3, 4)
         layout.addWidget(online, 3, 10, 1, 4)
         layout.addWidget(chat, 4, 10, 5, 4)
-        # Miejsce na szachownice starczy podmnieć obiekt guzika Ważne żeby zachować numerki ewentualnie zmienićna 1, 1 9,9 żeby było równo
+        # Miejsce na szachownice
         self.oponnent_user_name = QLabel('')
         layout.addWidget(self.oponnent_user_name, 0, 0, 1, 10, alignment=Qt.AlignRight)
         self.chessboard = Chessboard(self)
@@ -84,7 +85,7 @@ class Menu(QDialog):
         self.resign.clicked.connect(self.Resign)
         vbox.addWidget(QLabel(), 4, 0, 1, 1)
         vbox.addWidget(self.play, 5, 3, 1, 1)
-        vbox.addWidget(self.resign,5,0,1,1)
+        vbox.addWidget(self.resign, 5, 0, 1, 1)
         # Gra online
         vbox1 = QVBoxLayout()
         online.setLayout(vbox1)
@@ -111,28 +112,6 @@ class Menu(QDialog):
         vbox2.addWidget(self.send_messenge, 1, 1)
 
         # przykladowe wiadomosci dodane
-
-    def Pawn_promotion(self):
-        self.queen = QPushButton()
-        self.queen.setIcon(QIcon('Pieces/Chess_qdt60.png'))
-        self.queen.setGeometry(30, 30, 100, 100)
-        self.rook = QPushButton()
-        self.rook.setIcon(QIcon('Pieces/Chess_qdt60.png'))
-        self.rook.setGeometry(30, 30, 100, 100)
-
-        self.knight = QPushButton()
-        self.knight.setIcon(QIcon('Pieces/Chess_qdt60.png'))
-        self.knight.setGeometry(30, 30, 100, 100)
-
-        self.bishop = QPushButton()
-        self.bishop.setIcon(QIcon('Pieces/Chess_qdt60.png'))
-        self.bishop.setGeometry(30, 30, 100, 100)
-
-        self.layout.addWidget(self.rook, 0, 0)
-        self.layout.addWidget(self.queen, 0, 1)
-        self.layout.addWidget(self.knight, 0, 2)
-        self.layout.addWidget(self.bishop, 0, 3)
-        
 
     def Change_elo(self):
         if self.slider.value() >= 1000:
@@ -164,7 +143,6 @@ class Menu(QDialog):
             self.chessboard.change_sides(self.white)
             self.chessboard.reset_pieces()
             self.in_game = True
-
 
     def Send_message(self):
         if self.text_messenge.text().strip() == "":
@@ -212,3 +190,5 @@ class Menu(QDialog):
         if self.in_game:
             self.client.resign()
             self.in_game = False
+        else:
+            self.Pawn_promotion()

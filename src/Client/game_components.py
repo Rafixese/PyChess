@@ -6,7 +6,7 @@ from PyQt5 import QtWidgets
 from PyQt5.QtCore import Qt, pyqtSlot
 from PyQt5.QtWidgets import QApplication, QWidget, QLabel, QMessageBox, QPushButton, QLineEdit, QMainWindow, QGroupBox, \
     QGridLayout, QVBoxLayout, QDialog, QHBoxLayout, QListWidget, QScrollBar, QSlider
-
+from src.Client.prmotion_window import Promotion
 import pathlib
 
 # LOGGING CONFIG
@@ -161,8 +161,20 @@ class Piece(QLabel):
                             is_promotion = False
                             if self.__type == 'p' and (move_dst[1] == '8' or move_dst[1] == '1'):
                                 #TODO Wyslwietlic opcje wyboru
+                                promotion = Promotion("white" if self.is_white else "black")
+                                promotion.exec_()
+                                print(promotion.result())
+                                while promotion.piece == "X":
+                                    if promotion.isHidden():
+                                        promotion.piece = "Q"
+                                    if not self.__parent.get_parent().in_game:
+                                        promotion.close()
+                                        return
+                                print(promotion.piece)
+                                a = promotion.piece
+                                promotion.close()
                                 is_promotion = True
-                                msg = {'request_type': 'player_move', 'move': f'{self.__field.label}{field.label}Q'}
+                                msg = {'request_type': 'player_move', 'move': f'{self.__field.label}{field.label}{a}'}
                             else:
                                 msg = {'request_type': 'player_move', 'move': f'{self.__field.label}{field.label}'}
                             self.__parent.parent.client.send_to_socket(msg)
@@ -178,7 +190,7 @@ class Piece(QLabel):
                             moved = True
 
                             if is_promotion:
-                                self.change_type(promotion='q')
+                                self.change_type(promotion=a.lower())
                                 #TODO zmienic hard type
                             self.__parent.is_white_move = not self.__parent.is_white_move
                             self.__parent.is_player_turn = False
