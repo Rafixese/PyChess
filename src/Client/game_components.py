@@ -38,7 +38,7 @@ class BoardField(QLabel):
 
         self.show()
 
-    def reversed(self,white_bottom_black_top):
+    def reversed(self, white_bottom_black_top):
         self.__not_reversed = white_bottom_black_top
         self.__label = f'{FIELD_LETTERS[-self.__col - 1]}{self.__row + 1}' if not self.__not_reversed else f'{FIELD_LETTERS[self.__col]}{8 - self.__row}'
 
@@ -69,7 +69,6 @@ class BoardField(QLabel):
     @property
     def piece(self):
         return self.__piece
-
     def has_piece(self):
         return self.__piece is not None
 
@@ -104,7 +103,6 @@ class Piece(QLabel):
         self.setPixmap(pixmap)
         self.show()
 
-
     def change_type(self, promotion):
         self.__type = promotion
         path = pathlib.Path(f'Pieces/Chess_{self.__type}{"lt" if self.__is_white else "dt"}60.png')
@@ -134,7 +132,7 @@ class Piece(QLabel):
         self.__field = None
 
     def mouseMoveEvent(self, event):
-        if  self.__parent.white_bottom_black_top == self.is_white and self.__parent.is_player_turn:
+        if self.__parent.white_bottom_black_top == self.is_white and self.__parent.is_player_turn:
             pos_x, pos_y = int(event.windowPos().x() - FIELD_SIZE * 0.6), int(
                 event.windowPos().y() - FIELD_SIZE)
             self.raise_()
@@ -158,9 +156,10 @@ class Piece(QLabel):
                             logging.debug(f'Move {self.__field.label} -> {field.label}')
                             move_src = self.__field.label
                             move_dst = field.label
+                            move_src_field = self.__field
+                            move_dst_field = field
                             is_promotion = False
                             if self.__type == 'p' and (move_dst[1] == '8' or move_dst[1] == '1'):
-                                #TODO Wyslwietlic opcje wyboru
                                 promotion = Promotion("white" if self.is_white else "black")
                                 promotion.exec_()
                                 print(promotion.result())
@@ -177,6 +176,7 @@ class Piece(QLabel):
                                 msg = {'request_type': 'player_move', 'move': f'{self.__field.label}{field.label}{a}'}
                             else:
                                 msg = {'request_type': 'player_move', 'move': f'{self.__field.label}{field.label}'}
+
                             self.__parent.parent.client.send_to_socket(msg)
                             self.__parent.parent.client.move_lock.acquire()
                             while self.__parent.parent.client.move_lock.locked():
@@ -191,7 +191,8 @@ class Piece(QLabel):
 
                             if is_promotion:
                                 self.change_type(promotion=a.lower())
-                                #TODO zmienic hard type
+                            if self.__type == "p" and move_dst_field.piece is None and move_src_field.col - move_dst_field.col != 0:
+                                self.__parent.fields[move_dst_field.row + 1][move_dst_field.col].remove_piece()
                             self.__parent.is_white_move = not self.__parent.is_white_move
                             self.__parent.is_player_turn = False
                             self.__parent.castle(move_src, move_dst)
@@ -265,12 +266,11 @@ class Chessboard(QWidget):
             for col in range(8):
                 self.__fields[row][col].reversed(white_bottom_black_top)
 
-
     def find_field(self, label: str):
         field_letter, field_num = label
         col = FIELD_LETTERS.index(field_letter) if self.__white_bottom_black_top else 7 - FIELD_LETTERS.index(
             field_letter)
-        row = 7 - (int(field_num) - 1) if self.__white_bottom_black_top else int(field_num)-1
+        row = 7 - (int(field_num) - 1) if self.__white_bottom_black_top else int(field_num) - 1
 
         return self.__fields[row][col]
 
@@ -278,10 +278,12 @@ class Chessboard(QWidget):
         self.setGeometry(500, 500, BOARD_SIZE, BOARD_SIZE)
         self.show()
 
-    def play_move(self, src: str, dst: str,promotion = None):
+    def play_move(self, src: str, dst: str, promotion=None):
         src_field = self.find_field(src)
         dst_field = self.find_field(dst)
         self.castle(src, dst)
+        if src_field.piece.type == "p" and dst_field.piece is None and src_field.col - dst_field.col != 0:
+            self.__fields[dst_field.row - 1][dst_field.col].remove_piece()
         if dst_field.has_piece():
             dst_field.remove_piece()
         dst_field.add_piece(src_field.piece)
