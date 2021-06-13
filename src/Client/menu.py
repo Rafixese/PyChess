@@ -57,7 +57,7 @@ class Menu(QDialog):
         self.slider.setTickPosition(QSlider.TicksBothSides)
         self.slider.setMinimum(1)
         self.slider.setMaximum(20)
-        self.slider.setTickInterval(100)
+        self.slider.setTickInterval(1)
         self.slider.setValue(5)
         self.slider.valueChanged.connect(self.Change_elo)
 
@@ -114,7 +114,7 @@ class Menu(QDialog):
         # przykladowe wiadomosci dodane
 
     def Change_elo(self):
-        if self.slider.value() >= 1000:
+        if self.slider.value() >= 10:
             self.elo.setText("" + str(self.slider.value()) + " ")
         else:
             self.elo.setText(" " + str(self.slider.value()) + " ")

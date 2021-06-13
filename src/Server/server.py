@@ -1,3 +1,5 @@
+from json import JSONDecodeError
+
 import select
 import socket
 import logging
@@ -54,100 +56,104 @@ class Server:
         sleep_time = 0.1
         client = Client(client_sock)
         self.__clients.append(client)
-        while True:
-            try:
+        try:
+            while True:
                 client.ping()
                 msg = client.read_from_socket()
-            except ConnectionResetError:
-                logging.warning(f'Connection reset for client {client}, deleting client')
-                self.__clients.remove(client)
-                self.__remove_from_games(client)
-                return
-            except BrokenPipeError:
-                logging.warning(f'Broken pipe for client {client}, deleting client')
-                self.__clients.remove(client)
-                self.__remove_from_games(client)
-                return
-            if msg is None or msg == '':
-                time.sleep(sleep_time)
-                continue
-            ####################
-            # Message handling #
-            ####################
-            if msg['request_type'] == 'create_client':
-                try:
-                    create_client(
-                        msg['username'],
-                        msg['email'],
-                        msg['password_hash']
-                    )
-                    client.set_client_usr_name(msg['username'])
-                    client.send_to_socket({'request_type': 'response_to_request', 'type': 'OK'})
-                except Exception as e:
-                    logging.error(e)
-                    client.send_to_socket({'request_type': 'response_to_request', 'type': 'ERROR', 'msg': str(e)})
-            elif msg['request_type'] == 'auth_client':
-                client_exist = False
-                for i in self.__clients:
-                    if i.get_username() == msg['username']:
-                        client_exist = True
-                        client.send_to_socket({'request_type': 'response_to_request','type': 'BUSY'})
-                        break
-                if not client_exist:
+                if msg is None or msg == '':
+                    time.sleep(sleep_time)
+                    continue
+                ####################
+                # Message handling #
+                ####################
+                if msg['request_type'] == 'create_client':
                     try:
-                        usr = auth_client(msg['username'], msg['password_hash'])
-                        client.set_client_usr_name(usr)
-                        client.send_to_socket({'request_type': 'response_to_request', 'type': 'OK', 'username': usr})
-                        client.set_name(msg['username'])
+                        create_client(
+                            msg['username'],
+                            msg['email'],
+                            msg['password_hash']
+                        )
+                        client.set_client_usr_name(msg['username'])
+                        client.send_to_socket({'request_type': 'response_to_request', 'type': 'OK'})
                     except Exception as e:
                         logging.error(e)
                         client.send_to_socket({'request_type': 'response_to_request', 'type': 'ERROR', 'msg': str(e)})
-            elif msg['request_type'] == 'find_opponent':
-                # setup game
-                try:
-                    if self.__is_someone_waiting:
-                        self.__is_someone_waiting = False
-                        self.games[-1].set_clinet2(client)
-                    else:
-                        g = Game_with_Player(client, self)
-                        self.__is_someone_waiting = True
-                        self.games.append(g)
-                except:
-                    pass
-
-            elif msg['request_type'] == 'play_with_bot':
-                print(msg['color'], msg['elo'])
-                game = BotGame(client, msg['color'], msg['elo'], self)
-                self.bot_games.append(game)
-            elif msg['request_type'] == 'message':
-                for i in self.games:
-                    i.check_if_player_in(client, msg['text'])
-            elif msg['request_type'] == 'player_move':
-                for game in self.games + self.bot_games:
-                    is_valid = game.check_move(msg['move'])
-                    client.send_to_socket({'request_type': 'move_valid', 'valid': is_valid})
-                    if is_valid:
-                        if game in self.bot_games:
-                            sleep(sleep_time*2)
-                            game.make_move(msg['move'])
+                elif msg['request_type'] == 'auth_client':
+                    client_exist = False
+                    for i in self.__clients:
+                        if i.get_username() == msg['username']:
+                            client_exist = True
+                            client.send_to_socket({'request_type': 'response_to_request','type': 'BUSY'})
+                            break
+                    if not client_exist:
+                        try:
+                            usr = auth_client(msg['username'], msg['password_hash'])
+                            client.set_client_usr_name(usr)
+                            client.send_to_socket({'request_type': 'response_to_request', 'type': 'OK', 'username': usr})
+                            client.set_name(msg['username'])
+                        except Exception as e:
+                            logging.error(e)
+                            client.send_to_socket({'request_type': 'response_to_request', 'type': 'ERROR', 'msg': str(e)})
+                elif msg['request_type'] == 'find_opponent':
+                    # setup game
+                    try:
+                        if self.__is_someone_waiting:
+                            self.__is_someone_waiting = False
+                            self.games[-1].set_clinet2(client)
                         else:
-                            sleep(sleep_time * 2)
-                            if client == game.get_client():
-                                oponnent = game.get_client2()
-                            else:
-                                oponnent = game.get_client()
-                            game.make_move(msg['move'])
-                            oponnent.send_to_socket({'request_type': 'player_move', 'move': msg['move']})
-            elif msg['request_type'] == 'resign':
-                for i in self.games:
-                    if i.check_logout(client):
-                        self.games.remove(i)
-                for i in self.bot_games:
-                    if i.is_client_in_game(client):
-                        self.bot_games.remove(i)
-                client.send_to_socket({'request_type': 'resign'})
-            time.sleep(sleep_time)
+                            g = Game_with_Player(client, self)
+                            self.__is_someone_waiting = True
+                            self.games.append(g)
+                    except:
+                        pass
 
+                elif msg['request_type'] == 'play_with_bot':
+                    print(msg['color'], msg['elo'])
+                    game = BotGame(client, msg['color'], msg['elo'], self)
+                    self.bot_games.append(game)
+                elif msg['request_type'] == 'message':
+                    for i in self.games:
+                        i.check_if_player_in(client, msg['text'])
+                elif msg['request_type'] == 'player_move':
+                    for game in self.games + self.bot_games:
+                        is_valid = game.check_move(msg['move'])
+                        client.send_to_socket({'request_type': 'move_valid', 'valid': is_valid})
+                        if is_valid:
+                            if game in self.bot_games:
+                                sleep(sleep_time*2)
+                                game.make_move(msg['move'])
+                            else:
+                                sleep(sleep_time * 2)
+                                if client == game.get_client():
+                                    oponnent = game.get_client2()
+                                else:
+                                    oponnent = game.get_client()
+                                game.make_move(msg['move'])
+                                oponnent.send_to_socket({'request_type': 'player_move', 'move': msg['move']})
+                elif msg['request_type'] == 'resign':
+                    for i in self.games:
+                        if i.check_logout(client):
+                            self.games.remove(i)
+                    for i in self.bot_games:
+                        if i.is_client_in_game(client):
+                            self.bot_games.remove(i)
+                    client.send_to_socket({'request_type': 'resign'})
+                time.sleep(sleep_time)
+        except ConnectionResetError:
+            logging.warning(f'Connection reset for client {client}, deleting client')
+            self.__clients.remove(client)
+            self.__remove_from_games(client)
+            return
+        except BrokenPipeError:
+            logging.warning(f'Broken pipe for client {client}, deleting client')
+            self.__clients.remove(client)
+            self.__remove_from_games(client)
+            return
+        except JSONDecodeError:
+            logging.warning(f'Broken pipe for client {client}, deleting client')
+            self.__clients.remove(client)
+            self.__remove_from_games(client)
+            return
 
 s = Server()
 while True:
