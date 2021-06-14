@@ -10,10 +10,10 @@ import bcrypt
 from PyQt5.QtCore import QMetaObject
 from PyQt5.QtCore import Qt
 
-salt = b'$2b$12$djq/vdGik/e.nlUWotW6Au'
-
 # LOGGING CONFIG
 logging.basicConfig(format='%(asctime)s :: %(levelname)s :: %(message)s', level=logging.DEBUG)
+
+salt = '$2a$12$C74p7L4mOinffBtg.YoYcO'
 
 # SERVER CONFIG
 HOST = 'localhost'
@@ -159,7 +159,7 @@ class Client:
         self.__socket_lock.release()
 
     def register_user(self, username, email, password):
-        password_hash = bcrypt.hashpw(password.encode(), salt).decode()
+        password_hash = bcrypt.hashpw(password, salt)
         msg = {
             'request_type': 'create_client',
             'username': username,
@@ -170,7 +170,7 @@ class Client:
 
     def login(self, username, password):
 
-        password_hash = bcrypt.hashpw(password.encode(), salt).decode()
+        password_hash = bcrypt.hashpw(password, salt)
         msg = {
             'request_type': 'auth_client',
             'username': username,
