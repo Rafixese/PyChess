@@ -2,6 +2,11 @@
 
 Gra w szachy tylko w Pythonie :)
 
+## Wymagania
+```
+Python 3.8
+```
+
 ## Instalacja
 
 Wchodzimy i pobieramy najnowsze wydanie aplikacji.
