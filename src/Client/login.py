@@ -1,12 +1,13 @@
-from PyQt5.QtGui import QFont
-from PyQt5 import QtWidgets
-from PyQt5.QtWidgets import QApplication, QWidget, QLabel, QMessageBox, QPushButton, QLineEdit, QMainWindow
 import sys
+
+from PyQt5 import QtWidgets
+from PyQt5.QtCore import pyqtSlot
+from PyQt5.QtGui import QFont
+from PyQt5.QtWidgets import QApplication, QLabel, QMessageBox, QPushButton, QLineEdit
+
+from src.Client.captcha import Captcha
 from src.Client.menu import Menu
 from src.Client.server_client import Client
-from PyQt5.QtCore import pyqtSlot
-# from src.Client.captcha import Captcha
-import numpy as np
 
 
 class Login(QtWidgets.QMainWindow):
@@ -20,12 +21,12 @@ class Login(QtWidgets.QMainWindow):
         self.login = True
         self.log_show_bool = True
         self.reg_show_bool = True
-        self.InitWindow_login()
-        self.InitWindow_register()
+        self.init_window_login()
+        self.init_window_register()
         self.client = Client(self)
         self.cap = None
 
-    def InitWindow_login(self):
+    def init_window_login(self):
         self.log_text = QLabel(self)
         self.log_text.setText("Username")
         self.log_text.setFont(QFont('Arial', 20))
@@ -46,28 +47,28 @@ class Login(QtWidgets.QMainWindow):
         self.log_reg = QPushButton("Login", self)
         self.log_reg.setGeometry(50, 300, 400, 50)
         self.log_reg.setStyleSheet("background-color: white")
-        self.log_reg.clicked.connect(self.Switch_to_menu)
+        self.log_reg.clicked.connect(self.switch_to_menu)
 
         self.log_button = QPushButton("Login", self)
         self.log_button.setGeometry(150, 25, 100, 50)
         self.log_button.setStyleSheet("background-color: grey")
-        self.log_button.clicked.connect(self.Switch_reg_log)
+        self.log_button.clicked.connect(self.switch_reg_log)
 
         self.reg_button = QPushButton("Register", self)
         self.reg_button.setGeometry(250, 25, 100, 50)
-        self.reg_button.clicked.connect(self.Switch_log_reg)
+        self.reg_button.clicked.connect(self.switch_log_reg)
         self.reg_button.setStyleSheet("background-color: white")
 
         self.log_show = QPushButton("show", self)
         self.log_show.setGeometry(400, 225, 50, 25)
-        self.log_show.clicked.connect(self.Show_hide_log_pass)
+        self.log_show.clicked.connect(self.show_hide_log_pass)
         self.log_show.setStyleSheet("background-color: white")
 
         self.setWindowTitle(self.title)
         self.setGeometry(self.top, self.left, self.width, self.height)
         self.show()
 
-    def InitWindow_register(self):
+    def init_window_register(self):
         self.user_text = QLabel(self)
         self.user_text.setText("Username")
         self.user_text.setFont(QFont('Arial', 20))
@@ -96,10 +97,10 @@ class Login(QtWidgets.QMainWindow):
 
         self.reg_show = QPushButton("Show", self)
         self.reg_show.setGeometry(400, 250, 50, 25)
-        self.reg_show.clicked.connect(self.Show_hide_reg_pass)
+        self.reg_show.clicked.connect(self.show_hide_reg_pass)
         self.reg_show.setStyleSheet("background-color: white")
 
-    def Switch_log_reg(self):
+    def switch_log_reg(self):
         if self.login == True:
             self.login = False
             self.log_text.hide()
@@ -119,7 +120,7 @@ class Login(QtWidgets.QMainWindow):
             self.in_password_register.show()
             self.reg_show.show()
 
-    def Switch_reg_log(self):
+    def switch_reg_log(self):
         if self.login == False:
             self.login = True
             self.user_text.hide()
@@ -139,7 +140,7 @@ class Login(QtWidgets.QMainWindow):
             self.in_password_login.show()
             self.log_show.show()
 
-    def Show_hide_log_pass(self):
+    def show_hide_log_pass(self):
         if self.log_show_bool:
             self.log_show_bool = not self.log_show_bool
             self.in_password_login.setEchoMode(0)
@@ -149,7 +150,7 @@ class Login(QtWidgets.QMainWindow):
             self.in_password_login.setEchoMode(2)
             self.log_show.setText("Show")
 
-    def Show_hide_reg_pass(self):
+    def show_hide_reg_pass(self):
         if self.reg_show_bool:
             self.reg_show_bool = not self.reg_show_bool
             self.in_password_register.setEchoMode(0)
@@ -159,7 +160,7 @@ class Login(QtWidgets.QMainWindow):
             self.in_password_register.setEchoMode(2)
             self.reg_show.setText("Show")
 
-    def Switch_to_menu(self):
+    def switch_to_menu(self):
         if self.login == True:
             self.client.login(self.in_login.text(), self.in_password_login.text())
 
@@ -170,14 +171,14 @@ class Login(QtWidgets.QMainWindow):
                 QMessageBox.warning(self, "Register error", "To short password", QMessageBox.Ok)
             elif "@" not in self.in_mail.text():
                 QMessageBox.warning(self, "Register error", "Incorrect e-mail", QMessageBox.Ok)
-            # else:
-            #     if self.cap == None:
-            #         self.cap = Captcha(self)
-            #     else:
-            #         if self.cap.isHidden():
-            #             self.cap.show()
-            #         else:
-            #             QMessageBox.warning(self, "Captcha", "Captcha error", QMessageBox.Ok)
+            else:
+                if self.cap == None:
+                    self.cap = Captcha(self)
+                else:
+                    if self.cap.isHidden():
+                        self.cap.show()
+                    else:
+                        QMessageBox.warning(self, "Captcha", "Captcha error", QMessageBox.Ok)
 
     @pyqtSlot()
     def Display_error_login(self):
@@ -193,7 +194,7 @@ class Login(QtWidgets.QMainWindow):
     def Display_error_busy(self):
         QMessageBox.warning(self, "Authorization error", "User already is used", QMessageBox.Ok)
 
-    def Register(self):
+    def register(self):
         self.client.register_user(self.in_user.text(), self.in_mail.text(), self.in_password_register.text())
 
     def closeEvent(self, event):

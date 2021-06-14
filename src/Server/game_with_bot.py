@@ -1,8 +1,10 @@
-from stockfish.models import Stockfish
-import platform
-import pathlib
 import os
+import pathlib
+import platform
 from time import sleep
+
+from stockfish.models import Stockfish
+
 
 class BotGame:
     def __init__(self, client, client_color, elo, parent):
@@ -25,11 +27,9 @@ class BotGame:
         self.stockfish = Stockfish(str(path))
         self.stockfish.set_elo_rating(self.elo)
 
-        print(self.stockfish.get_board_visual())
         if self.client_color == "black":
             sleep(2)
             self.make_bot_move()
-
 
     def is_client_in_game(self, client):
         return self.client == client
@@ -42,7 +42,6 @@ class BotGame:
         move = move.lower()
         self.moves.append(move)
         self.stockfish.set_position(self.moves)
-        print(self.stockfish.get_board_visual())
         self.check_for_end_game()
         self.make_bot_move()
 
@@ -51,22 +50,16 @@ class BotGame:
         self.stockfish.set_skill_level(self.elo)
         self.stockfish.set_depth(self.elo)
         best_move = self.stockfish.get_best_move()
-        print(best_move)
         self.moves.append(best_move)
         self.stockfish.set_position(self.moves)
-        print(self.stockfish.get_board_visual())
         self.client.send_to_socket({'request_type': 'player_move', 'move': best_move.upper()})
         self.check_for_end_game()
 
     def check_for_end_game(self):
         eval = self.stockfish.get_evaluation()
-        print(eval)
         top_moves = self.stockfish.get_top_moves(3)
-        print(top_moves)
         fen_color = self.stockfish.get_fen_position().split(' ')[1]
-        print(fen_color)
         if eval['type'] == 'cp' and eval['value'] == 0 and len(top_moves) == 0:
-            print('PAT')
             msg = {
                 'request_type': 'stealmate'
             }
@@ -74,7 +67,6 @@ class BotGame:
             self.parent.bot_games.remove(self)
         elif eval['type'] == 'mate' and eval['value'] == 0:
             if fen_color == 'b':
-                print('WHITE WINS')
                 if self.client_color == 'white':
                     msg = {
                         'request_type': 'win'
@@ -85,7 +77,6 @@ class BotGame:
                     }
                 self.client.send_to_socket(msg)
             elif fen_color == 'w':
-                print('BLACK WINS')
                 if self.client_color == 'black':
                     msg = {
                         'request_type': 'win'

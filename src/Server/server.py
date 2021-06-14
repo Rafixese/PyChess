@@ -1,19 +1,14 @@
-from json import JSONDecodeError
-
-import select
-import socket
 import logging
-import time
-import uuid
-import datetime
+import socket
 import threading
-import json
+import time
+from json import JSONDecodeError
 from time import sleep
 
-from src.Server.game_with_bot import BotGame
-from src.Server.server_client import Client
 from src.Server.database import create_client, auth_client
+from src.Server.game_with_bot import BotGame
 from src.Server.game_with_player import Game_with_Player
+from src.Server.server_client import Client
 
 # LOGGING CONFIG
 logging.basicConfig(format='%(asctime)s :: %(levelname)s :: %(message)s', level=logging.DEBUG)
@@ -83,17 +78,19 @@ class Server:
                     for i in self.__clients:
                         if i.get_username() == msg['username']:
                             client_exist = True
-                            client.send_to_socket({'request_type': 'response_to_request','type': 'BUSY'})
+                            client.send_to_socket({'request_type': 'response_to_request', 'type': 'BUSY'})
                             break
                     if not client_exist:
                         try:
                             usr = auth_client(msg['username'], msg['password_hash'])
                             client.set_client_usr_name(usr)
-                            client.send_to_socket({'request_type': 'response_to_request', 'type': 'OK', 'username': usr})
+                            client.send_to_socket(
+                                {'request_type': 'response_to_request', 'type': 'OK', 'username': usr})
                             client.set_name(msg['username'])
                         except Exception as e:
                             logging.error(e)
-                            client.send_to_socket({'request_type': 'response_to_request', 'type': 'ERROR', 'msg': str(e)})
+                            client.send_to_socket(
+                                {'request_type': 'response_to_request', 'type': 'ERROR', 'msg': str(e)})
                 elif msg['request_type'] == 'find_opponent':
                     # setup game
                     try:
@@ -108,7 +105,6 @@ class Server:
                         pass
 
                 elif msg['request_type'] == 'play_with_bot':
-                    print(msg['color'], msg['elo'])
                     game = BotGame(client, msg['color'], msg['elo'], self)
                     self.bot_games.append(game)
                 elif msg['request_type'] == 'message':
@@ -120,7 +116,7 @@ class Server:
                         client.send_to_socket({'request_type': 'move_valid', 'valid': is_valid})
                         if is_valid:
                             if game in self.bot_games:
-                                sleep(sleep_time*2)
+                                sleep(sleep_time * 2)
                                 game.make_move(msg['move'])
                             else:
                                 sleep(sleep_time * 2)
@@ -154,6 +150,7 @@ class Server:
             self.__clients.remove(client)
             self.__remove_from_games(client)
             return
+
 
 s = Server()
 while True:
