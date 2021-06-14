@@ -1,11 +1,10 @@
-import sys
-import time
-from PyQt5 import QtCore, QtGui, QtWidgets, uic
+import cv2
+import numpy as np
+from PyQt5 import QtGui, QtWidgets
 from PyQt5.QtGui import QPixmap
 from PyQt5.QtWidgets import QPushButton
-import cv2
-# from keras.models import load_model
-import numpy as np
+from keras.models import load_model
+
 
 class Captcha(QtWidgets.QMainWindow):
 
@@ -28,7 +27,7 @@ class Captcha(QtWidgets.QMainWindow):
         self.label.setPixmap(canvas)
         self.label.setGeometry(0, 225, 200, 200)
         self.obraz = QtWidgets.QLabel("", self)
-        pixmap = QPixmap('show.png')
+        pixmap = QPixmap('capcha.png')
         self.obraz.setPixmap(pixmap)
         self.obraz.setGeometry(0, 0, 200, 200)
         self.obraz.setStyleSheet("")
@@ -57,16 +56,17 @@ class Captcha(QtWidgets.QMainWindow):
         self.last_y = None
 
     def save(self):
-        self.label.pixmap().save("siema.png", "PNG")
-        cv2.imread("siema.png")
+        self.label.pixmap().save("usr_capcha.png", "PNG")
+        cv2.imread("usr_capcha.png")
 
-        #self.save_tests_to_model()
+        # self.save_tests_to_model()
 
-        if self.rmsdiff(cv2.imread("siema.png"), cv2.imread("show.png")) and self.model(cv2.imread("siema.png", cv2.IMREAD_GRAYSCALE)) :
+        if self.rms_diff(cv2.imread("usr_capcha.png"), cv2.imread("capcha.png")) and self.model(
+                cv2.imread("usr_capcha.png", cv2.IMREAD_GRAYSCALE)):
             self.label.pixmap().fill(QtGui.QColor("white"))
             self.label.hide()
             self.label.show()
-            self.parent.Register()
+            self.parent.register()
             self.close()
             self.destroy()
         else:
@@ -74,7 +74,9 @@ class Captcha(QtWidgets.QMainWindow):
             self.label.hide()
             self.label.show()
             print("Musisz jeszcze poprobwac")
-    def rmsdiff(self, image1, image2):
+
+    @staticmethod
+    def rms_diff(image1, image2):
         good = 0
         all = 0
         good2 = 0
@@ -90,24 +92,19 @@ class Captcha(QtWidgets.QMainWindow):
                         image2[i][j][2] and image1[i][j][0] == 255:
                     good2 += 1
                 allw += 1
-        if good / all > 0.4 and good2 / allw > 0.6:
+        if good / all > 0.1 and good2 / allw > 0.6:
             print(good / all)
             return True
         else:
             print(good / all)
-            return False
-    def model(self,image1):
-        model = load_model("model_good.h5")
-        xtest = np.array(image1/255)
-        xtest = xtest.reshape((1,) + xtest.shape + (1,))
-        preds = model.predict(xtest)[0][1]
-        if preds > 0.6:
-            return True
-        else:
             return False
 
-if __name__ == "__main__":
-    app = QtWidgets.QApplication(sys.argv)
-    window = Captcha(123)
-    window.show()
-    app.exec_()
+    def model(self, image1):
+        model = load_model("model_good.h5")
+        xtest = np.array(image1 / 255)
+        xtest = xtest.reshape((1,) + xtest.shape + (1,))
+        preds = model.predict(xtest)[0][1]
+        if preds > 0.5:
+            return True
+        else:
+            return False

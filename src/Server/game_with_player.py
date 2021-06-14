@@ -1,10 +1,9 @@
-from src.Server.server_client import Client
-import random
-from stockfish.models import Stockfish
-import platform
 import pathlib
-import os
-from time import sleep
+import platform
+import random
+
+from stockfish.models import Stockfish
+
 
 class Game_with_Player:
     def __init__(self, client, parent):
@@ -18,7 +17,6 @@ class Game_with_Player:
 
     def get_client2(self):
         return self.__client2
-
 
     def set_clinet2(self, client2):
         self.__client2 = client2
@@ -88,7 +86,6 @@ class Game_with_Player:
                     self.__client.send_to_socket({'request_type': 'win'})
                     self.__client2.send_to_socket({'request_type': 'lose'})
             self.parent.games.remove(self)
-
 
     def start_game(self):
         color = random.randint(0, 1)

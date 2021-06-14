@@ -1,8 +1,7 @@
-from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy import Column, Integer, String, or_
 from sqlalchemy import create_engine
-from sqlalchemy.orm import sessionmaker, relationship
-from sqlalchemy import Column, Integer, String, Date, ForeignKey, or_
-import bcrypt
+from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy.orm import sessionmaker
 
 Base = declarative_base()
 
@@ -33,6 +32,7 @@ def create_client(username, email, password_hash):
     c = Client(username, email, password_hash)
     session.add(c)
     session.commit()
+
 
 def auth_client(username, password_hash):
     c: Client = session.query(Client).filter(Client.username == username).first()

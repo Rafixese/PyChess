@@ -1,12 +1,5 @@
-import threading
-
 from PyQt5.QtGui import QFont, QIcon
-from PyQt5 import QtWidgets
-from PyQt5.QtCore import Qt, pyqtSlot, QSize
-from PyQt5.QtWidgets import QApplication, QWidget, QLabel, QMessageBox, QPushButton, QLineEdit, QMainWindow, QGroupBox, \
-    QGridLayout, QVBoxLayout, QDialog, QHBoxLayout, QListWidget, QScrollBar, QSlider
-import sys
-from src.Client.server_client import Client
+from PyQt5.QtWidgets import QLabel, QPushButton, QDialog
 
 
 class Promotion(QDialog):
@@ -22,9 +15,9 @@ class Promotion(QDialog):
         self.knight = QPushButton(self)
         self.text = QLabel(self)
         self.piece = "X"
-        self.Init_window()
+        self.init_window()
 
-    def Init_window(self):
+    def init_window(self):
         self.setWindowTitle(self.title)
         self.setFixedSize(self.width, self.height)
 
@@ -64,17 +57,15 @@ class Promotion(QDialog):
     def queen_click(self):
         self.piece = "Q"
         self.close()
+
     def rook_click(self):
         self.piece = "R"
         self.close()
+
     def bishop_click(self):
         self.piece = "B"
         self.close()
+
     def knight_click(self):
         self.piece = "N"
         self.close()
-
-if __name__ == "__main__":
-    App = QApplication(sys.argv)
-    window = Promotion("white")
-    sys.exit(App.exec())

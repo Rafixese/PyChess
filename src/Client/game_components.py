@@ -1,13 +1,11 @@
 import logging
-import time
-
-from PyQt5.QtGui import QFont, QPixmap
-from PyQt5 import QtWidgets
-from PyQt5.QtCore import Qt, pyqtSlot
-from PyQt5.QtWidgets import QApplication, QWidget, QLabel, QMessageBox, QPushButton, QLineEdit, QMainWindow, QGroupBox, \
-    QGridLayout, QVBoxLayout, QDialog, QHBoxLayout, QListWidget, QScrollBar, QSlider
-from src.Client.prmotion_window import Promotion
 import pathlib
+
+from PyQt5.QtCore import pyqtSlot
+from PyQt5.QtGui import QPixmap
+from PyQt5.QtWidgets import QWidget, QLabel
+
+from src.Client.prmotion_window import Promotion
 
 # LOGGING CONFIG
 logging.basicConfig(format='%(asctime)s :: %(levelname)s :: %(message)s', level=logging.DEBUG)
@@ -69,6 +67,7 @@ class BoardField(QLabel):
     @property
     def piece(self):
         return self.__piece
+
     def has_piece(self):
         return self.__piece is not None
 
@@ -170,10 +169,11 @@ class Piece(QLabel):
                                         promotion.close()
                                         return
                                 print(promotion.piece)
-                                a = promotion.piece
+                                promotion_to_piece = promotion.piece
                                 promotion.close()
                                 is_promotion = True
-                                msg = {'request_type': 'player_move', 'move': f'{self.__field.label}{field.label}{a}'}
+                                msg = {'request_type': 'player_move',
+                                       'move': f'{self.__field.label}{field.label}{promotion_to_piece}'}
                             else:
                                 msg = {'request_type': 'player_move', 'move': f'{self.__field.label}{field.label}'}
 
@@ -190,7 +190,7 @@ class Piece(QLabel):
                             moved = True
 
                             if is_promotion:
-                                self.change_type(promotion=a.lower())
+                                self.change_type(promotion=promotion_to_piece.lower())
                             if self.__type == "p" and move_dst_field.piece is None and move_src_field.col - move_dst_field.col != 0:
                                 self.__parent.fields[move_dst_field.row + 1][move_dst_field.col].remove_piece()
                             self.__parent.is_white_move = not self.__parent.is_white_move

@@ -1,11 +1,11 @@
-from PyQt5.QtGui import QFont, QIcon
-from PyQt5 import QtWidgets
-from PyQt5.QtCore import Qt, pyqtSlot, QSize
-from PyQt5.QtWidgets import QApplication, QWidget, QLabel, QMessageBox, QPushButton, QLineEdit, QMainWindow, QGroupBox, \
-    QGridLayout, QVBoxLayout, QDialog, QHBoxLayout, QListWidget, QScrollBar, QSlider
 import sys
+
+from PyQt5.QtCore import Qt, pyqtSlot
+from PyQt5.QtGui import QFont
+from PyQt5.QtWidgets import QLabel, QMessageBox, QPushButton, QLineEdit, QGroupBox, \
+    QGridLayout, QVBoxLayout, QDialog, QListWidget, QScrollBar, QSlider
+
 from src.Client.game_components import Chessboard
-from src.Client.server_client import Client
 
 
 class Menu(QDialog):
@@ -18,16 +18,16 @@ class Menu(QDialog):
         self.white = True
         self.client = client
         self.in_game = False
-        self.Init_window()
+        self.init_window()
 
-    def Init_window(self):
+    def init_window(self):
         self.setWindowTitle(self.title)
         self.setFixedSize(self.width, self.height)
 
-        self.Grid()
+        self.grid()
         self.show()
 
-    def Grid(self):
+    def grid(self):
         # Umiejscownienie boxów i miejsce na szachownice
         layout = QGridLayout()
         self.setLayout(layout)
@@ -59,7 +59,7 @@ class Menu(QDialog):
         self.slider.setMaximum(20)
         self.slider.setTickInterval(1)
         self.slider.setValue(5)
-        self.slider.valueChanged.connect(self.Change_elo)
+        self.slider.valueChanged.connect(self.change_elo)
 
         self.dif = QLabel("Select difficulty")
         self.dif.setFont(QFont('Arial', 20))
@@ -73,16 +73,16 @@ class Menu(QDialog):
         vbox.addWidget(label, 2, 0, 1, 2)
         self.w = QPushButton("White")
         self.w.setStyleSheet("Background-color: grey")
-        self.w.clicked.connect(self.Switch_color_b_w)
+        self.w.clicked.connect(self.switch_color_b_w)
         self.b = QPushButton("Black")
-        self.b.clicked.connect(self.Switch_color_w_b)
+        self.b.clicked.connect(self.switch_color_w_b)
         self.b.setStyleSheet("Background-color: lightgrey")
         vbox.addWidget(self.w, 3, 0)
         vbox.addWidget(self.b, 3, 1)
         self.play = QPushButton("Play")
-        self.play.clicked.connect(self.Play_with_bot)
+        self.play.clicked.connect(self.play_with_bot)
         self.resign = QPushButton("Resign")
-        self.resign.clicked.connect(self.Resign)
+        self.resign.clicked.connect(self.resign_game)
         vbox.addWidget(QLabel(), 4, 0, 1, 1)
         vbox.addWidget(self.play, 5, 3, 1, 1)
         vbox.addWidget(self.resign, 5, 0, 1, 1)
@@ -91,7 +91,7 @@ class Menu(QDialog):
         online.setLayout(vbox1)
 
         self.find_button = QPushButton('Find opponent')
-        self.find_button.clicked.connect(self.Find_opponent)
+        self.find_button.clicked.connect(self.find_opponent)
         vbox1.addWidget(self.find_button)
 
         # Donly box z miejscem przygotownym pod chat
@@ -108,43 +108,43 @@ class Menu(QDialog):
         self.text_messenge = QLineEdit()
         vbox2.addWidget(self.text_messenge, 1, 0)
         self.send_messenge = QPushButton("Send")
-        self.send_messenge.clicked.connect(self.Send_message)
+        self.send_messenge.clicked.connect(self.send_message)
         vbox2.addWidget(self.send_messenge, 1, 1)
 
         # przykladowe wiadomosci dodane
 
-    def Change_elo(self):
+    def change_elo(self):
         if self.slider.value() >= 10:
             self.elo.setText("" + str(self.slider.value()) + " ")
         else:
             self.elo.setText(" " + str(self.slider.value()) + " ")
 
-    def Switch_color_w_b(self):
+    def switch_color_w_b(self):
         if self.white:
             self.w.setStyleSheet("background-color: lightgrey")
             self.b.setStyleSheet("background-color: grey")
             self.white = not self.white
 
-    def Switch_color_b_w(self):
+    def switch_color_b_w(self):
         if not self.white:
             self.b.setStyleSheet("background-color: lightgrey")
             self.w.setStyleSheet("background-color: grey")
             self.white = not self.white
 
-    def Find_opponent(self):
+    def find_opponent(self):
         if not self.in_game:
             self.client.find_opponent()
             self.in_game = True
             self.list_widget.addItem("SYSTEM: Looking for game")
 
-    def Play_with_bot(self):
+    def play_with_bot(self):
         if not self.in_game:
             self.client.play_with_bot('white' if self.white else 'black', self.elo.text())
             self.chessboard.change_sides(self.white)
             self.chessboard.reset_pieces()
             self.in_game = True
 
-    def Send_message(self):
+    def send_message(self):
         if self.text_messenge.text().strip() == "":
             pass
         else:
@@ -186,7 +186,7 @@ class Menu(QDialog):
         else:
             event.ignore()
 
-    def Resign(self):
+    def resign_game(self):
         if self.in_game:
             self.client.resign()
             self.in_game = False

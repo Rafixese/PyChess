@@ -1,18 +1,14 @@
+import json
+import logging
 import select
 import socket
-import logging
-import time
-import uuid
-import datetime
 import threading
-import json
-from time import sleep
-import bcrypt
+import time
 
+import bcrypt
 # CRYPT SETTINGS
-from PyQt5.QtCore import QMetaObject, Q_ARG
+from PyQt5.QtCore import QMetaObject
 from PyQt5.QtCore import Qt
-from PyQt5 import QtCore
 
 salt = b'$2b$12$djq/vdGik/e.nlUWotW6Au'
 
@@ -118,7 +114,7 @@ class Client:
                     if len(msg['move']) == 5:
                         promotion = msg['move'][4]
 
-                    self.__parent.chessboard.play_move(move_src, move_dst,promotion)
+                    self.__parent.chessboard.play_move(move_src, move_dst, promotion)
                 if msg['request_type'] == 'resign':
                     QMetaObject.invokeMethod(self.__parent, 'Resign_confirmed', Qt.QueuedConnection)
                     self.__parent.list_widget.addItem('SYSTEM: You have resigned')
@@ -203,14 +199,9 @@ class Client:
             'text': text
         }
         self.send_to_socket(msg)
+
     def resign(self):
         msg = {
             'request_type': 'resign'
         }
         self.send_to_socket(msg)
-
-if __name__ == "__main__":
-    c = Client()
-    c.login('oplamo', 'qwerty')
-    while True:
-        pass

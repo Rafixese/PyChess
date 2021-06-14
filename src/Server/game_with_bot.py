@@ -1,8 +1,10 @@
-from stockfish.models import Stockfish
-import platform
-import pathlib
 import os
+import pathlib
+import platform
 from time import sleep
+
+from stockfish.models import Stockfish
+
 
 class BotGame:
     def __init__(self, client, client_color, elo, parent):
@@ -29,7 +31,6 @@ class BotGame:
         if self.client_color == "black":
             sleep(2)
             self.make_bot_move()
-
 
     def is_client_in_game(self, client):
         return self.client == client
