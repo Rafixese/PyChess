@@ -105,7 +105,6 @@ class Server:
                         pass
 
                 elif msg['request_type'] == 'play_with_bot':
-                    print(msg['color'], msg['elo'])
                     game = BotGame(client, msg['color'], msg['elo'], self)
                     self.bot_games.append(game)
                 elif msg['request_type'] == 'message':

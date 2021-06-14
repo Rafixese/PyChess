@@ -161,14 +161,12 @@ class Piece(QLabel):
                             if self.__type == 'p' and (move_dst[1] == '8' or move_dst[1] == '1'):
                                 promotion = Promotion("white" if self.is_white else "black")
                                 promotion.exec_()
-                                print(promotion.result())
                                 while promotion.piece == "X":
                                     if promotion.isHidden():
                                         promotion.piece = "Q"
                                     if not self.__parent.get_parent().in_game:
                                         promotion.close()
                                         return
-                                print(promotion.piece)
                                 promotion_to_piece = promotion.piece
                                 promotion.close()
                                 is_promotion = True
@@ -243,14 +241,12 @@ class Chessboard(QWidget):
         self.__is_player_turn = val
 
     def castle(self, move_src: str, move_dst: str):
-        print(move_src, move_dst)
         dst_field = self.find_field(move_src)
         dst_piece = dst_field.piece
         if dst_piece.type != 'k':
             return
         castling_moves = [('E1', 'G1'), ('E1', 'C1'), ('E8', 'G8'), ('E8', 'C8')]
         rook_moves = [('H1', 'F1'), ('A1', 'D1'), ('H8', 'F8'), ('A8', 'D8')]
-        # print(((move_src, move_dst) in castling_moves))
         if (move_src, move_dst) in castling_moves:
             index = castling_moves.index((move_src, move_dst))
             rook_move = rook_moves[index]

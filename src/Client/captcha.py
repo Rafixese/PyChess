@@ -73,7 +73,6 @@ class Captcha(QtWidgets.QMainWindow):
             self.label.pixmap().fill(QtGui.QColor("white"))
             self.label.hide()
             self.label.show()
-            print("Musisz jeszcze poprobwac")
 
     @staticmethod
     def rms_diff(image1, image2):
@@ -93,10 +92,8 @@ class Captcha(QtWidgets.QMainWindow):
                     good2 += 1
                 allw += 1
         if good / all > 0.1 and good2 / allw > 0.6:
-            print(good / all)
             return True
         else:
-            print(good / all)
             return False
 
     def model(self, image1):
